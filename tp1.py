@@ -59,35 +59,36 @@ X_r, X_t, Y_r, Y_t = split_data(features, class_labels, 0.66)
 def fold(Y_r, folds):
     kf = StratifiedKFold(Y_r, n_folds = folds)
     return kf
-    
-kfolds = fold(Y_r, 5)
+
+folds = 5    
+kfolds = fold(Y_r, folds)
         
 # Step 3 - Compute train and validation error
-# - For the regularization parameter of the logistic regression classifier, 
+# TODO, im not sure how - For the regularization parameter of the logistic regression classifier, 
 # start with a C value of 1 and double it at each iteration for 20 iterations.
-# - Plot the errors against the logarithm of the C value.
-# - Use the fraction of incorrect classifications as the measure of the error.
+# TODO - Plot the errors against the logarithm of the C value.
+# - (Done) Use the fraction of incorrect classifications as the measure of the error.
 # This is equal to 1-accuracy, and the accuracy can be obtained with the score 
-# method of the logistic regression and KNN classifiers in Scikit-learn.
-def calc_fold(features, X, Y, train_ix,valid_ix,C=1e12):
+# method of the logistic regression and KNN classifiers in Scikit-learn. 
+def calc_fold(features, X, Y, train_subset, valid_subset, C=1e12):
     """return error for train and validation sets"""
     reg = LogisticRegression(C=C, tol=1e-10)
-    reg.fit(X[train_ix,:features], Y[train_ix])
-    prob = reg.predict_proba(X[:,:features])[:,1]
-    squares = (prob-Y)**2
-    return np.mean(squares[train_ix]), np.mean(squares[valid_ix])
-    
-# test_error = 1-reg.score(X_t,Y_t)
+    X_train = X[train_subset,:features]
+    Y_train = Y[train_subset]
+    X_valid = X[valid_subset,:features]
+    Y_valid = Y[valid_subset]
+    reg.fit(X_train, Y_train)
+    # fraction of incorrect classifications
+    # TODO not sure if this is correct
+    train_error = 1-reg.score(X_train, Y_train) 
+    valid_error = 1-reg.score(X_valid, Y_valid)
+    return train_error, valid_error
 
 def logRegression():
     for features in range(2, 5):
-        tr_err = va_err = 0
-        for tr_ix,va_ix in kfolds:
-            r,v = calc_fold(features, X_r, Y_r, tr_ix, va_ix)
-            tr_err += r
-            va_err += v
-            print(features,':', tr_err/kfolds,va_err/kfolds)
-   
-       
-       
-       
+        train_error = valid_error = 0
+        for train_subset, valid_subset in kfolds:
+            r, v = calc_fold(features, X_r, Y_r, train_subset, valid_subset)
+            train_error += r
+            valid_error += v
+            print(features, ':', train_error/folds, valid_error/folds)
