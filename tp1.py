@@ -18,7 +18,10 @@ from sklearn.model_selection import StratifiedKFold
 import matplotlib.pyplot as plt
 from sklearn.metrics import confusion_matrix
 from sklearn.metrics import accuracy_score
+from sklearn.neighbors import KNeighborsClassifier
 
+
+############ FUNCTIONS TO PREPROCESS DATA #####################################
 def reading_csv(filename):
     """This function reads a csv file a returns
     a data matri and a vector labels.
@@ -97,6 +100,8 @@ def preprocess_data(filename, Train_Size, Seed, Column_Names, Label_Name=['Class
     display_data(X_train, y_train)
     return X_train, X_test, y_train, y_test
 
+
+############### FUNCTIONS TO COMPUTE THE LOGISTIC REGRESSION ##################
 def logistic_regression_tuning(X_train, y_train, cv_seed, iteration):
     """This function trains the hyperparamater of the linear regression
     doing a 5-fold stratified CV with the provided Training data and labels.
@@ -142,7 +147,7 @@ def logistic_fitting(X_train, y_train, CV_data, cv_seed):
     cv_eval= model_selection.cross_val_score(logistic, X_train,
                                                  y_train.values.ravel(),
                                                  cv=StratifiedKFold(n_splits=5,random_state= cv_seed,shuffle=True))
-    print("\nLogistic Regression (L2) Tuning:\nCV AccuracyMean: %3.4f\t Std: %3.4f" % (np.average(cv_eval), np.std(cv_eval))) 
+    print("\nLogistic Regression (L2) Tuning:\n\tCV AccuracyMean: %3.4f\t Std: %3.4f" % (np.average(cv_eval), np.std(cv_eval))) 
     return logistic
     
 def logistic_regression_training(X_train, y_train, cv_seed, iteration):
@@ -166,6 +171,75 @@ def logistic_testing(X_test, y_test, logistic):
     print("\nAccuracy: \t%3.4f" % accuracy_score(y_test, y_pred))
     return logistic_confusion_matrix
 
+
+########### FUNCTIONS TO COMPUTE THE kNN ######################################
+def knn_tuning(X_train, y_train, cv_seed, maximum_k):
+    """This function trains the k-parameter of the kNN
+    doing a 5-fold stratified CV with the provided Training data and labels.
+    The hyperparameter is obtained by considering the odd sequence up to the
+    value provided as input.
+    We start with 1 as the first value. The model is returned.
+    We set a seed, given as input."""
+    CV_data= []
+    for k_neigh in range(1, maximum_k, 2):
+        neigh = KNeighborsClassifier(n_neighbors= k_neigh)
+        neigh.fit(X_train, y_train.values.ravel())
+        cv_eval= model_selection.cross_val_score(neigh, X_train,
+                                                 y_train.values.ravel(),
+                                                 cv=StratifiedKFold(n_splits=5,random_state= cv_seed,shuffle=True))
+        CV_data.append([k_neigh, np.mean(cv_eval), np.std(cv_eval), neigh.score(X_train, y_train)])
+    CV_data= pd.DataFrame(CV_data)
+    CV_data.columns= ["k", "CVAccuracy", "CVStd", "TrainAccuracy"]
+    x= CV_data[["k"]]
+    y_cv= CV_data[["CVAccuracy"]]
+    y_train= CV_data[["TrainAccuracy"]]
+    
+    plt.figure(3)
+    plt.plot(x, y_cv, label= "CV Accuracy")
+    plt.plot(x, y_train, label= "Train Accuracy")
+    plt.xlabel("Number k of Neighbours")
+    plt.ylabel("Accuracy")
+    plt.title("k Nearest Neighbours")
+    plt.legend()
+    plt.show()
+    plt.close()
+    return CV_data
+
+def knn_fitting(X_train, y_train, CV_data, cv_seed):
+    """This function fits the Knn considering
+    the best value obtained in tuning. It returns the model.
+    We set a seed, given as input."""
+    index= CV_data['CVAccuracy'].idxmax()
+    k_neigh= CV_data['k'][index]
+    neigh = KNeighborsClassifier(n_neighbors= k_neigh)
+    neigh.fit(X_train, y_train.values.ravel())
+    cv_eval= model_selection.cross_val_score(neigh, X_train,
+                                                 y_train.values.ravel(),
+                                                 cv=StratifiedKFold(n_splits=5,random_state= cv_seed,shuffle=True))
+    print("\nkNN Tuning:\n\tCV AccuracyMean: %3.4f\t Std: %3.4f" % (np.average(cv_eval), np.std(cv_eval))) 
+    return neigh
+
+def knn_training(X_train, y_train, cv_seed, maximum_k):
+    """This function wraps the tuning and fitting of the kNN.
+    It return the model. We set a seed, given as input."""
+    CV_data= knn_tuning(X_train, y_train, cv_seed, maximum_k)
+    k_neigh= knn_fitting(X_train, y_train, CV_data, cv_seed)
+    return neigh
+
+def knn_testing(X_test, y_test, neigh):
+    """This function tests the logistic regression provided
+    on a given test set. It return the confusion matrix."""
+    y_pred= neigh.predict(X_test)
+    knn_confusion_matrix= confusion_matrix(y_test, y_pred)
+    tn, fp, fn, tp = knn_confusion_matrix.ravel()
+    print("\nkNN Testing:")
+    print("\tTrue Negative: %d" % tn)
+    print("\tFalse Positive: %d" % fp)
+    print("\tFalse Negative: %d" % fn)
+    print("\tTrue Positive: %d" % tp)
+    print("\nAccuracy: \t%3.4f" % accuracy_score(y_test, y_pred))
+    return knn_confusion_matrix
+
 filename= 'TP1-data.csv'
 Train_Size= 0.66
 Seed= 10182017
@@ -175,3 +249,8 @@ X_train, X_test, y_train, y_test= preprocess_data(filename, Train_Size, Seed, Co
 cv_seed= 52222
 logistic= logistic_regression_training(X_train, y_train, cv_seed, 20)
 logistic_confusion_matrix= logistic_testing(X_test, y_test, logistic)
+
+neigh= knn_training(X_train, y_train, cv_seed, 40)
+knn_confusion_matrix= knn_testing(X_test, y_test, neigh)
+
+
