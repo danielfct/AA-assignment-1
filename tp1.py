@@ -20,6 +20,7 @@ from sklearn.metrics import confusion_matrix
 from sklearn.metrics import accuracy_score
 from sklearn.neighbors import KNeighborsClassifier
 from sklearn.model_selection import StratifiedKFold
+from tempfile import TemporaryFile
 
 
 ############ FUNCTIONS TO PREPROCESS DATA #####################################
@@ -126,10 +127,10 @@ def logistic_regression_tuning(X_train, y_train, cv_seed, iteration):
     y_train= CV_data[["TrainAccuracy"]]
     
     plt.figure(1)
-    plt.plot(x, y_cv, label= "CV Accuracy")
-    plt.plot(x, y_train, label= "Train Accuracy")
+    plt.plot(x, 1 - y_cv, label= "CV Error")
+    plt.plot(x, 1 - y_train, label= "Train Error")
     plt.xlabel("Logarithm of Inverse Penalisation")
-    plt.ylabel("Accuracy")
+    plt.ylabel("Error")
     plt.title("L2 Logistic Regression Tuning")
     plt.legend()
     plt.show()
@@ -196,10 +197,10 @@ def knn_tuning(X_train, y_train, cv_seed, maximum_k):
     y_train= CV_data[["TrainAccuracy"]]
     
     plt.figure(3)
-    plt.plot(x, y_cv, label= "CV Accuracy")
-    plt.plot(x, y_train, label= "Train Accuracy")
+    plt.plot(x, 1 - y_cv, label= "CV Error")
+    plt.plot(x, 1 - y_train, label= "Train Error")
     plt.xlabel("Number k of Neighbours")
-    plt.ylabel("Accuracy")
+    plt.ylabel("Error")
     plt.title("k Nearest Neighbours")
     plt.legend()
     plt.show()
@@ -280,15 +281,39 @@ def prediction_error(X_train, y_train, X_test, y_test, bandwidth, kernel= 'gauss
     dim_test= X_test.shape[0]
     y_predict= []
     for i in range(0, dim_test):
-        current_X= np.array(X_test.iloc[i,:])[:, np.newaxis]
+        current_X= np.array(X_test.iloc[i,:])
         likelihood_one= log_likelihood(current_X, X_one, bandwidth, kernel)
         likelihood_zero= log_likelihood(current_X, X_zero, bandwidth, kernel)
         y_predict.append(classify(prior_one, prior_zero, likelihood_one, likelihood_zero))
     y_predict= np.array(y_predict)
     error= 1 - accuracy_score(y_test, y_predict)
-    print("Misclassification error: %3.2f" % error)
+    #print("Misclassification error: %3.2f" % error)
     return error
 
+def bayes_cv(X_train, y_train, cv_seed, bandwidth):
+    skf = StratifiedKFold(n_splits=5, random_state= cv_seed, shuffle= True)
+    error= []
+    for train, test in skf.split(X_train, y_train.values.ravel()):
+        curr_error= prediction_error(X_train.iloc[train,:], y_train.iloc[train,:],
+                                 X_train.iloc[test,:], y_train.iloc[test,:],
+                                 bandwidth= bandwidth)
+        error.append(curr_error)
+    error= np.array(error)
+    return(np.mean(error), np.std(error))
+
+def bayes_tuning(X_train, y_train, cv_seed, bandwidth_max):
+    cv_error= []
+    for i in np.arange(0.01, bandwidth_max, 0.02):
+        print("Current Bandwidth %3.2f" % i)
+        curr_cv_error= bayes_cv(X_train, y_train, cv_seed, i)
+        cv_error.append(curr_cv_error)
+    return np.array(cv_error)
+
+def bayes_testing(X_train, y_train, X_test, y_test, cv_bayes, kernel= 'gaussian'):
+    bandwidth= cv_bayes[:,0].min()
+    test_error= prediction_error(X_train, y_train, X_test, y_test, bandwidth)
+    print("The testing error is: %3.2f" % test_error)
+    return test_error
 
 filename= 'TP1-data.csv'
 Train_Size= 0.66
@@ -302,4 +327,8 @@ logistic_confusion_matrix= logistic_testing(X_test, y_test, logistic)
 
 neigh= knn_training(X_train, y_train, cv_seed, 40)
 knn_confusion_matrix= knn_testing(X_test, y_test, neigh)
+
+
+cv_bayes= bayes_tuning(X_train, y_train, cv_seed, 1)
+bayes_error= bayes_testing(X_train, y_train, X_test, y_test, cv_bayes)
 
