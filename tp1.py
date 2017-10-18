@@ -149,7 +149,7 @@ def logistic_fitting(X_train, y_train, CV_data, cv_seed):
     cv_eval= model_selection.cross_val_score(logistic, X_train,
                                                  y_train.values.ravel(),
                                                  cv=StratifiedKFold(n_splits=5,random_state= cv_seed,shuffle=True))
-    print("\nLogistic Regression (L2) Tuning:\n\tCV AccuracyMean: %3.4f\t Std: %3.4f" % (np.average(cv_eval), np.std(cv_eval))) 
+    print("\nLogistic Regression (L2) Tuning:\n\tCV ErrorMean: %3.4f\t Std: %3.4f" % (1 - np.average(cv_eval), np.std(cv_eval))) 
     return logistic
     
 def logistic_regression_training(X_train, y_train, cv_seed, iteration):
@@ -170,7 +170,7 @@ def logistic_testing(X_test, y_test, logistic):
     print("\tFalse Positive: %d" % fp)
     print("\tFalse Negative: %d" % fn)
     print("\tTrue Positive: %d" % tp)
-    print("\nAccuracy: \t%3.4f" % accuracy_score(y_test, y_pred))
+    print("Test Error: \t%3.4f" % (1 - accuracy_score(y_test, y_pred)))
     return logistic_confusion_matrix
 
 
@@ -218,7 +218,7 @@ def knn_fitting(X_train, y_train, CV_data, cv_seed):
     cv_eval= model_selection.cross_val_score(neigh, X_train,
                                                  y_train.values.ravel(),
                                                  cv=StratifiedKFold(n_splits=5,random_state= cv_seed,shuffle=True))
-    print("\nkNN Tuning:\n\tCV AccuracyMean: %3.4f\t Std: %3.4f" % (np.average(cv_eval), np.std(cv_eval))) 
+    print("\nkNN Tuning:\n\tCV ErrorMean: %3.4f\t Std: %3.4f" % (1 - np.average(cv_eval), np.std(cv_eval))) 
     return neigh
 
 def knn_training(X_train, y_train, cv_seed, maximum_k):
@@ -241,7 +241,7 @@ def knn_testing(X_test, y_test, neigh):
     print("\tFalse Positive: %d" % fp)
     print("\tFalse Negative: %d" % fn)
     print("\tTrue Positive: %d" % tp)
-    print("\nAccuracy: \t%3.4f" % accuracy_score(y_test, y_pred))
+    print("Error: \t%3.4f" % (1 - accuracy_score(y_test, y_pred)))
     return knn_confusion_matrix
 
 
