@@ -223,7 +223,7 @@ def knn_training(X_train, y_train, cv_seed, maximum_k):
     """This function wraps the tuning and fitting of the kNN.
     It return the model. We set a seed, given as input."""
     CV_data= knn_tuning(X_train, y_train, cv_seed, maximum_k)
-    k_neigh= knn_fitting(X_train, y_train, CV_data, cv_seed)
+    neigh= knn_fitting(X_train, y_train, CV_data, cv_seed)
     return neigh
 
 def knn_testing(X_test, y_test, neigh):
@@ -239,6 +239,10 @@ def knn_testing(X_test, y_test, neigh):
     print("\tTrue Positive: %d" % tp)
     print("\nAccuracy: \t%3.4f" % accuracy_score(y_test, y_pred))
     return knn_confusion_matrix
+
+
+####### FUNCTIONS TO IMPLEMENT NAIVE BAYES ####################################
+
 
 filename= 'TP1-data.csv'
 Train_Size= 0.66
