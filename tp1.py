@@ -19,6 +19,7 @@ import matplotlib.pyplot as plt
 from sklearn.metrics import confusion_matrix
 from sklearn.metrics import accuracy_score
 from sklearn.neighbors import KNeighborsClassifier
+from sklearn.model_selection import StratifiedKFold
 
 
 ############ FUNCTIONS TO PREPROCESS DATA #####################################
@@ -273,7 +274,20 @@ def classify(prior_one, prior_zero, likelihood_one, likelihood_zero):
     else:
         return 0
     
-
+def prediction_error(X_train, y_train, X_test, y_test, bandwidth, kernel= 'gaussian'):
+    prior_one, prior_zero= compute_log_priors(y_train)
+    X_one, X_zero= separate_classes(X_train, y_train)
+    dim_test= X_test.shape[0]
+    y_predict= []
+    for i in range(0, dim_test):
+        current_X= np.array(X_test.iloc[i,:])[:, np.newaxis]
+        likelihood_one= log_likelihood(current_X, X_one, bandwidth, kernel)
+        likelihood_zero= log_likelihood(current_X, X_zero, bandwidth, kernel)
+        y_predict.append(classify(prior_one, prior_zero, likelihood_one, likelihood_zero))
+    y_predict= np.array(y_predict)
+    error= 1 - accuracy_score(y_test, y_predict)
+    print("Misclassification error: %3.2f" % error)
+    return error
 
 
 filename= 'TP1-data.csv'
