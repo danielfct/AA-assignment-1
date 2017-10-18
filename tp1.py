@@ -1,94 +1,111 @@
 # -*- coding: utf-8 -*-
 """
-Created on Sat Oct 14 21:19:26 2017
+Created on Wed Oct 18 03:13:58 2017
 
-@author: Daniel
+@author: Andrea
 """
 
-
-
-####### GUIDELINES #######
-# (Done) Process the data correctly, including randomizing the order of the data points and standardizing the values.
-# Determine the parameters with cross validation on two thirds of the data, leaving one third out for testing.
-# For the regularization parameter of the logistic regression classifier, start with a C value of 1 and double it at each iteration for 20 iterations. Plot the errors against the logarithm of the C value.
-# For the k value of the K-Nearest Neighbours classifier, test k values from 1 to 39 using odd values only.
-# Use the same bandwidth value for all the Kernel Density Estimators in your Naive Bayes classifier, and try values from 0.01 to 1 with a step of 0.02.
-# (Done) When splitting your data, for testing and for cross validation, use stratified sampling.
-# (Done) Use 5 folds for cross validation
-# Use the fraction of incorrect classifications as the measure of the error. This is equal to 1-accuracy, and the accuracy can be obtained with the score method of the logistic regression and KNN classifiers in Scikit-learn.
-# For the NB classifier, you can implement your own measure of the accuracy or use the accuracy_score function in the metrics module.
-# For comparing the classifiers, use McNemar's test with a 95% confidence interval
-
-
-
-
-# Importing the libraries required
+#Loading the relevant libraries
+import pandas as pd
 import numpy as np
-from sklearn import preprocessing 
-from sklearn.cross_validation import train_test_split
-from sklearn.cross_validation import StratifiedKFold
-from sklearn.linear_model import LogisticRegression
+import sklearn
+from sklearn.model_selection import train_test_split
+from sklearn.preprocessing import StandardScaler
+from sklearn import preprocessing
+from sklearn import linear_model
+from sklearn import model_selection
+from sklearn.model_selection import KFold
 
-#################################### Data #####################################
+def reading_csv(filename):
+    """This function reads a csv file a returns
+    a data matri and a vector labels.
+    We are assuming the labels are in the last position."""
+    data = pd.read_csv(filename)
+    last_column_index= data.shape[1] - 1 #0-based numeration
+    X= data.iloc[:,0:last_column_index]
+    y= data.iloc[:,last_column_index:]
+    return X, y
 
-# Step 1 - Process Data
-def input_data(file_name):
-    """ Function to load, shuffle and standardize the data from the data file """
-    mat = np.loadtxt(file_name, delimiter=',')
-    np.random.shuffle(mat)
-    features = preprocessing.scale(mat[:,0:3])
-    class_labels = mat[:,4]
-    return features, class_labels
+def split_training(Data_Matrix, Label_Vector, Train_Size, Seed):
+    """This function takes as an input the Data Matrix and the
+    Label Vector we are working with, shuffles the data according
+    to a Seed given as an input and splits according to the proportion
+    decided by the user.
+    It returns four elements: the training and test Data Matrix,
+    the training and testing Label Vectors"""
+    X_train, X_test, y_train, y_test= train_test_split(Data_Matrix, Label_Vector,
+                                                       train_size= Train_Size,
+                                                       random_state= Seed,
+                                                       shuffle= True,
+                                                       stratify= Label_Vector)
+    return X_train, X_test, y_train, y_test
 
-features, class_labels = input_data("TP1-data.csv")
+def normalise(X_train, X_test):
+    """This function performs a normalisation by subtracting the mean
+    and then dividing by the standard deviation.
+    It computes the mean value and standard deviation only on the training
+    matrix and apply the same transformation to both matrices."""
+    # Create a standard processor object
+    scaler= StandardScaler()
+    # Create an object to transform the data to fit standard processor
+    x_scaled= scaler.fit_transform(X_train)
+    # Run the normalizer on the dataframes
+    X_train = pd.DataFrame(x_scaled)
+    X_test= pd.DataFrame(scaler.transform(X_test))
+    return X_train, X_test
 
-############################# Logistic Regression #############################
+def rename_columns(X_train, X_test, y_train, y_test, Column_Names, Label_Name):
+    """This function changes the name of the columns of training and
+    data set and of the label vectors, using the same for the two.
+    It assumes that Column_Names and Label_Name are tuple of strings of the
+    right dimensions."""
+    X_train.columns= Column_Names
+    y_train.columns= Label_Name
+    X_test.columns= Column_Names
+    y_test.columns= Label_Name
+    return X_train, X_test, y_train, y_test
 
-# Step 1 - Split data using stratified sampling to use on Cross Validation 
-def split_data(features, class_labels, size):
-    """ Split data into a stratified train set and test set. 
-    The test set size is 1-train_size """
-    X_r, X_t, Y_r, Y_t = train_test_split(features, class_labels, train_size = size, stratify = class_labels)
-    return X_r, X_t, Y_r, Y_t
+def display_data(Data_Matrix, Label_Vector):
+    """This function allows to visualise the data and print
+    some information"""
+    print("Printing the first ten rows...")
+    print(Data_Matrix.head(10)) #printing the first ten rows
+    print("\nPrinting summary statistics...")
+    print(Data_Matrix.describe()) #Getting some information
+    print("\nPrinting scatterplots considering the class")
+    pd.plotting.scatter_matrix(Data_Matrix, alpha=0.8, figsize=(6, 6),
+                               diagonal='kde', c= Label_Vector)
 
-X_r, X_t, Y_r, Y_t = split_data(features, class_labels, 0.66)
-    
 
-# Step 2 - Get 5 folds to use on Cross Validation
+def preprocess_data(filename, Train_Size, Seed, Column_Names, Label_Name=['Class']):
+    """Encapsulating all the work done insofar.
+        Taking as input the filename, the relative
+        size of the training set, the seed for the
+        random reshuffling and the names we are willing to give to the columns"""
+    X, y= reading_csv(filename)
+    X_train, X_test, y_train, y_test= split_training(X, y, Train_Size, Seed)
+    X_train, X_test= normalise(X_train, X_test)
+    X_train, X_test, y_train, y_test= rename_columns(X_train, X_test, y_train, y_test, Column_Names, Label_Name)
+    print("Display information for the training set.")
+    display_data(X_train, y_train)
+    return X_train, X_test, y_train, y_test
 
-def fold(Y_r, folds):
-    kf = StratifiedKFold(Y_r, n_folds = folds)
-    return kf
+filename= 'TP1-data.csv'
+Train_Size= 0.66
+Seed= 10182017
+Column_Names= ['Variance', 'Skewness', 'Curtosis', 'Entropy']
+X_train, X_test, y_train, y_test= preprocess_data(filename, Train_Size, Seed, Column_Names)
+   
 
-folds = 5    
-kfolds = fold(Y_r, folds)
-        
-# Step 3 - Compute train and validation error
-# TODO, im not sure how - For the regularization parameter of the logistic regression classifier, 
-# start with a C value of 1 and double it at each iteration for 20 iterations.
-# TODO - Plot the errors against the logarithm of the C value.
-# - (Done) Use the fraction of incorrect classifications as the measure of the error.
-# This is equal to 1-accuracy, and the accuracy can be obtained with the score 
-# method of the logistic regression and KNN classifiers in Scikit-learn. 
-def calc_fold(features, X, Y, train_subset, valid_subset, C=1e12):
-    """return error for train and validation sets"""
-    reg = LogisticRegression(C=C, tol=1e-10)
-    X_train = X[train_subset,:features]
-    Y_train = Y[train_subset]
-    X_valid = X[valid_subset,:features]
-    Y_valid = Y[valid_subset]
-    reg.fit(X_train, Y_train)
-    # fraction of incorrect classifications
-    # TODO not sure if this is correct
-    train_error = 1-reg.score(X_train, Y_train) 
-    valid_error = 1-reg.score(X_valid, Y_valid)
-    return train_error, valid_error
+# TODO: make this a function 
+CV_data= []
+for i in range(0,80):
+    inverse_penalisation= pow(2,i)/100000
+    logistic = linear_model.LogisticRegression(penalty='l2', C= inverse_penalisation)
+    logistic.fit(X_train, y_train.values.ravel())
+    cv_eval = model_selection.cross_val_score(logistic, X_train, y_train.values.ravel(), cv=KFold(n_splits=5,random_state=52222,shuffle=True))
+    CV_data.append([inverse_penalisation, np.mean(cv_eval), np.std(cv_eval)])
 
-def logRegression():
-    for features in range(2, 5):
-        train_error = valid_error = 0
-        for train_subset, valid_subset in kfolds:
-            r, v = calc_fold(features, X_r, Y_r, train_subset, valid_subset)
-            train_error += r
-            valid_error += v
-            print(features, ':', train_error/folds, valid_error/folds)
+CV_data= pd.DataFrame(CV_data)
+CV_data.columns= ["InvPenalisation", "CVMean", "CVStd"]
+
