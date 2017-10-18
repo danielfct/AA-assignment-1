@@ -14,7 +14,8 @@ from sklearn.preprocessing import StandardScaler
 from sklearn import preprocessing
 from sklearn import linear_model
 from sklearn import model_selection
-from sklearn.model_selection import KFold
+from sklearn.model_selection import StratifiedKFold
+import matplotlib.pyplot as plt
 
 def reading_csv(filename):
     """This function reads a csv file a returns
@@ -73,8 +74,12 @@ def display_data(Data_Matrix, Label_Vector):
     print("\nPrinting summary statistics...")
     print(Data_Matrix.describe()) #Getting some information
     print("\nPrinting scatterplots considering the class")
+    
+    plt.figure(0)
     pd.plotting.scatter_matrix(Data_Matrix, alpha=0.8, figsize=(6, 6),
                                diagonal='kde', c= Label_Vector)
+    plt.show()
+    plt.close()
 
 
 def preprocess_data(filename, Train_Size, Seed, Column_Names, Label_Name=['Class']):
@@ -90,22 +95,42 @@ def preprocess_data(filename, Train_Size, Seed, Column_Names, Label_Name=['Class
     display_data(X_train, y_train)
     return X_train, X_test, y_train, y_test
 
+def logistic_regression_tuning(X_train, y_train, cv_seed, iteration):
+    CV_data= []
+    for i in range(0, iteration):
+        inverse_penalisation= pow(2,i)
+        logistic= linear_model.LogisticRegression(penalty='l2',
+                                                  C= inverse_penalisation)
+        logistic.fit(X_train, y_train.values.ravel())
+        cv_eval= model_selection.cross_val_score(logistic, X_train,
+                                                 y_train.values.ravel(),
+                                                 cv=StratifiedKFold(n_splits=5,random_state= cv_seed,shuffle=True))
+        CV_data.append([inverse_penalisation, np.mean(cv_eval), np.std(cv_eval), logistic.score(X_train, y_train)])
+    CV_data= pd.DataFrame(CV_data)
+    CV_data.columns= ["InvPenalisation", "CVError", "CVStd", "TrainError"]
+    x= np.log(CV_data[["InvPenalisation"]])
+    y_cv= CV_data[["CVError"]]
+    y_train= CV_data[["TrainError"]]
+    
+    plt.figure(1)
+    plt.plot(x, y_cv, label= "CV Accuracy")
+    plt.plot(x, y_train, label= "Train Accuracy")
+    plt.xlabel("Logarithm of Inverse Penalisation")
+    plt.ylabel("Accuracy")
+    plt.title("L2 Logistic Regression Tuning")
+    plt.legend()
+    plt.show()
+    plt.close()
+    
+    return CV_data
+    
+    
+
 filename= 'TP1-data.csv'
 Train_Size= 0.66
 Seed= 10182017
 Column_Names= ['Variance', 'Skewness', 'Curtosis', 'Entropy']
 X_train, X_test, y_train, y_test= preprocess_data(filename, Train_Size, Seed, Column_Names)
-   
 
-# TODO: make this a function 
-CV_data= []
-for i in range(0,80):
-    inverse_penalisation= pow(2,i)/100000
-    logistic = linear_model.LogisticRegression(penalty='l2', C= inverse_penalisation)
-    logistic.fit(X_train, y_train.values.ravel())
-    cv_eval = model_selection.cross_val_score(logistic, X_train, y_train.values.ravel(), cv=KFold(n_splits=5,random_state=52222,shuffle=True))
-    CV_data.append([inverse_penalisation, np.mean(cv_eval), np.std(cv_eval)])
-
-CV_data= pd.DataFrame(CV_data)
-CV_data.columns= ["InvPenalisation", "CVMean", "CVStd"]
-
+cv_seed= 52222
+CV_data= logistic_regression_tuning(X_train, y_train, cv_seed, 20)
