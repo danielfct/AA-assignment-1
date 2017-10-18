@@ -8,7 +8,7 @@ Created on Wed Oct 18 03:13:58 2017
 #Loading the relevant libraries
 import pandas as pd
 import numpy as np
-import sklearn
+from sklearn.neighbors.kde import KernelDensity
 from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import StandardScaler
 from sklearn import preprocessing
@@ -223,6 +223,8 @@ def knn_training(X_train, y_train, cv_seed, maximum_k):
     """This function wraps the tuning and fitting of the kNN.
     It return the model. We set a seed, given as input."""
     CV_data= knn_tuning(X_train, y_train, cv_seed, maximum_k)
+    
+    
     neigh= knn_fitting(X_train, y_train, CV_data, cv_seed)
     return neigh
 
@@ -242,6 +244,36 @@ def knn_testing(X_test, y_test, neigh):
 
 
 ####### FUNCTIONS TO IMPLEMENT NAIVE BAYES ####################################
+def compute_log_priors(y_train):
+    first_class= np.sum(y_train) / y_train.shape[0] 
+    zero_class= 1 - first_class
+    return np.array(np.log(first_class)), np.array(np.log(zero_class))
+    
+def separate_classes(X, y):
+    class_index= (y == 1).values.ravel()
+    X_first_class= X.iloc[class_index,:]
+    X_zero_class= X.iloc[~class_index,:]
+    return X_first_class, X_zero_class
+
+def log_likelihood(x, X_train, bandwidth, kernel):
+    num_dim= X_train.shape[1]
+    x= np.array(x)[:, np.newaxis]
+    log_dens= np.zeros(1)
+    for i in range(0, num_dim):
+        kde= KernelDensity(bandwidth= bandwidth, kernel= kernel)
+        feature= np.array(X_train.iloc[:,i])
+        feature= np.array(feature)[:, np.newaxis]
+        kde.fit(feature)
+        log_dens+= kde.score(x)
+    return log_dens
+
+def classify(prior_one, prior_zero, likelihood_one, likelihood_zero):
+    if (prior_one + likelihood_one) > (prior_zero + likelihood_zero):
+        return 1
+    else:
+        return 0
+    
+
 
 
 filename= 'TP1-data.csv'
@@ -256,5 +288,4 @@ logistic_confusion_matrix= logistic_testing(X_test, y_test, logistic)
 
 neigh= knn_training(X_train, y_train, cv_seed, 40)
 knn_confusion_matrix= knn_testing(X_test, y_test, neigh)
-
 
