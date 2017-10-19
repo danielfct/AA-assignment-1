@@ -133,7 +133,7 @@ def logistic_regression_plotting(inv_penalisations, cv_accuracy, train_accuracy)
     plt.ylabel("Error")
     plt.title("L2 Logistic Regression Regularization")
     plt.legend()
-    # annotate selected inverted penalisation constant
+    # annotate selected k value
     idxmin= (1 - cv_accuracy['CVAccuracy']).idxmin()
     xmin= inv_penalisations['InvPenalisation'][idxmin]
     ymin= (1 - cv_accuracy['CVAccuracy'])[idxmin]
