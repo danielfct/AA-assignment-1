@@ -21,6 +21,7 @@ from sklearn.metrics import accuracy_score
 from sklearn.neighbors import KNeighborsClassifier
 from sklearn.model_selection import StratifiedKFold
 from tempfile import TemporaryFile
+from sklearn.metrics import confusion_matrix
 
 
 ############ FUNCTIONS TO PREPROCESS DATA #####################################
@@ -81,7 +82,7 @@ def display_data(Data_Matrix, Label_Vector):
     print("\nPrinting summary statistics...")
     print(Data_Matrix.describe()) #Getting some information
     print("\nPrinting scatterplots considering the class")
-    
+
     plt.figure(0)
     pd.plotting.scatter_matrix(Data_Matrix, alpha=0.8, figsize=(6, 6),
                                diagonal='kde', c= Label_Vector)
@@ -125,7 +126,7 @@ def logistic_regression_tuning(X_train, y_train, cv_seed, iteration):
     x= np.log(CV_data[["InvPenalisation"]])
     y_cv= CV_data[["CVAccuracy"]]
     y_train= CV_data[["TrainAccuracy"]]
-    
+
     plt.figure(1)
     plt.plot(x, 1 - y_cv, label= "CV Error")
     plt.plot(x, 1 - y_train, label= "Train Error")
@@ -136,7 +137,7 @@ def logistic_regression_tuning(X_train, y_train, cv_seed, iteration):
     plt.show()
     plt.close()
     return CV_data
-    
+
 def logistic_fitting(X_train, y_train, CV_data, cv_seed):
     """This function fits the logistic regression considering
     the best value obtained in tuning. It returns the model.
@@ -149,9 +150,9 @@ def logistic_fitting(X_train, y_train, CV_data, cv_seed):
     cv_eval= model_selection.cross_val_score(logistic, X_train,
                                                  y_train.values.ravel(),
                                                  cv=StratifiedKFold(n_splits=5,random_state= cv_seed,shuffle=True))
-    print("\nLogistic Regression (L2) Tuning:\n\tCV ErrorMean: %3.4f\t Std: %3.4f" % (1 - np.average(cv_eval), np.std(cv_eval))) 
+    print("\nLogistic Regression (L2) Tuning:\n\tCV ErrorMean: %3.4f\t Std: %3.4f" % (1 - np.average(cv_eval), np.std(cv_eval)))
     return logistic
-    
+
 def logistic_regression_training(X_train, y_train, cv_seed, iteration):
     """This function wraps the tuning and fitting of the logistic regression.
     It return the model. We set a seed, given as input."""
@@ -195,7 +196,7 @@ def knn_tuning(X_train, y_train, cv_seed, maximum_k):
     x= CV_data[["k"]]
     y_cv= CV_data[["CVAccuracy"]]
     y_train= CV_data[["TrainAccuracy"]]
-    
+
     plt.figure(3)
     plt.plot(x, 1 - y_cv, label= "CV Error")
     plt.plot(x, 1 - y_train, label= "Train Error")
@@ -218,15 +219,15 @@ def knn_fitting(X_train, y_train, CV_data, cv_seed):
     cv_eval= model_selection.cross_val_score(neigh, X_train,
                                                  y_train.values.ravel(),
                                                  cv=StratifiedKFold(n_splits=5,random_state= cv_seed,shuffle=True))
-    print("\nkNN Tuning:\n\tCV ErrorMean: %3.4f\t Std: %3.4f" % (1 - np.average(cv_eval), np.std(cv_eval))) 
+    print("\nkNN Tuning:\n\tCV ErrorMean: %3.4f\t Std: %3.4f" % (1 - np.average(cv_eval), np.std(cv_eval)))
     return neigh
 
 def knn_training(X_train, y_train, cv_seed, maximum_k):
     """This function wraps the tuning and fitting of the kNN.
     It return the model. We set a seed, given as input."""
     CV_data= knn_tuning(X_train, y_train, cv_seed, maximum_k)
-    
-    
+
+
     neigh= knn_fitting(X_train, y_train, CV_data, cv_seed)
     return neigh
 
@@ -248,17 +249,22 @@ def knn_testing(X_test, y_test, neigh):
 
 ####### FUNCTIONS TO IMPLEMENT NAIVE BAYES ####################################
 def compute_log_priors(y_train):
-    first_class= np.sum(y_train) / y_train.shape[0] 
+    """This function compute the logarithm of the priors by taking the ratio
+    of classes in the training set"""
+    first_class= np.sum(y_train) / y_train.shape[0]
     zero_class= 1 - first_class
     return np.array(np.log(first_class)), np.array(np.log(zero_class))
-    
+
 def separate_classes(X, y):
+    """This function separates a data matrix according to the class label.
+    It returns the separated databases"""
     class_index= (y == 1).values.ravel()
     X_first_class= X.iloc[class_index,:]
     X_zero_class= X.iloc[~class_index,:]
     return X_first_class, X_zero_class
 
 def log_likelihood(x, X_train, bandwidth, kernel):
+    """This function computes the likelihood of a new point considering a kernel"""
     num_dim= X_train.shape[1]
     x= np.array(x)[:, np.newaxis]
     log_dens= np.zeros(1)
@@ -271,12 +277,15 @@ def log_likelihood(x, X_train, bandwidth, kernel):
     return log_dens
 
 def classify(prior_one, prior_zero, likelihood_one, likelihood_zero):
+    """This function classifies a point considering the priors
+    and the likelihoods"""
     if (prior_one + likelihood_one) > (prior_zero + likelihood_zero):
         return 1
     else:
         return 0
-    
+
 def prediction_error(X_train, y_train, X_test, y_test, bandwidth, kernel= 'gaussian'):
+    """This function returns the prediction error of a testing set"""
     prior_one, prior_zero= compute_log_priors(y_train)
     X_one, X_zero= separate_classes(X_train, y_train)
     dim_test= X_test.shape[0]
@@ -289,9 +298,10 @@ def prediction_error(X_train, y_train, X_test, y_test, bandwidth, kernel= 'gauss
     y_predict= np.array(y_predict)
     error= 1 - accuracy_score(y_test, y_predict)
     #print("Misclassification error: %3.2f" % error)
-    return error
+    return error, y_predict
 
 def bayes_cv(X_train, y_train, cv_seed, bandwidth):
+    """This function computes the cv error for Naive Bayes."""
     skf = StratifiedKFold(n_splits=5, random_state= cv_seed, shuffle= True)
     error= []
     for train, test in skf.split(X_train, y_train.values.ravel()):
@@ -303,12 +313,14 @@ def bayes_cv(X_train, y_train, cv_seed, bandwidth):
     return(np.mean(error), np.std(error))
 
 def bayes_tuning(X_train, y_train, cv_seed, bandwidth_max):
+    """This function is to tune the bandwidth parameter for Bayes Naive
+    Classifier"""
     cv_error= []
     for i in np.arange(0.01, bandwidth_max, 0.02):
         print("Current Bandwidth %3.2f" % i)
         curr_cv_error= bayes_cv(X_train, y_train, cv_seed, i)
         cv_error.append(curr_cv_error)
-    
+
     cv_error= np.array(cv_error)
     plt.figure(4)
     plt.plot(np.arange(0.01, bandwidth_max, 0.02), cv_error[:,0], label= "CV Error")
@@ -321,10 +333,12 @@ def bayes_tuning(X_train, y_train, cv_seed, bandwidth_max):
     return cv_error
 
 def bayes_testing(X_train, y_train, X_test, y_test, cv_bayes, kernel= 'gaussian'):
+    """This function returns the prediction for the testing set"""
     bandwidth= cv_bayes[:,0].min()
-    test_error= prediction_error(X_train, y_train, X_test, y_test, bandwidth)
+    test_error, y_predicted= prediction_error(X_train, y_train, X_test, y_test, bandwidth)
     print("The testing error is: %3.2f" % test_error)
-    return test_error
+    bayes_confusion_matrix= confusion_matrix(y_test, y_predicted)
+    return test_error, bayes_confusion_matrix
 
 filename= 'TP1-data.csv'
 Train_Size= 0.66
@@ -342,5 +356,4 @@ knn_confusion_matrix= knn_testing(X_test, y_test, neigh)
 
 
 cv_bayes= bayes_tuning(X_train, y_train, cv_seed, 2)
-bayes_error= bayes_testing(X_train, y_train, X_test, y_test, cv_bayes)
-
+bayes_error, bayes_confusion_matrix= bayes_testing(X_train, y_train, X_test, y_test, cv_bayes)
