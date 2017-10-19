@@ -1,9 +1,4 @@
 # -*- coding: utf-8 -*-
-"""
-Created on Wed Oct 18 03:13:58 2017
-
-@author: Andrea
-"""
 
 #Loading the relevant libraries
 import pandas as pd
@@ -11,23 +6,19 @@ import numpy as np
 from sklearn.neighbors.kde import KernelDensity
 from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import StandardScaler
-from sklearn import preprocessing
-from sklearn import linear_model
-from sklearn import model_selection
+from sklearn.linear_model import LogisticRegression
+from sklearn.model_selection import cross_val_score
 from sklearn.model_selection import StratifiedKFold
 import matplotlib.pyplot as plt
 from sklearn.metrics import confusion_matrix
 from sklearn.metrics import accuracy_score
 from sklearn.neighbors import KNeighborsClassifier
-from sklearn.model_selection import StratifiedKFold
-from tempfile import TemporaryFile
-from sklearn.metrics import confusion_matrix
 
 
 ############ FUNCTIONS TO PREPROCESS DATA #####################################
 def reading_csv(filename):
     """This function reads a csv file a returns
-    a data matri and a vector labels.
+    a data matrix and a vector labels.
     We are assuming the labels are in the last position."""
     data = pd.read_csv(filename)
     last_column_index= data.shape[1] - 1 #0-based numeration
@@ -35,19 +26,22 @@ def reading_csv(filename):
     y= data.iloc[:,last_column_index:]
     return X, y
 
-def split_training(Data_Matrix, Label_Vector, Train_Size, Seed):
+
+def split_training(data_matrix, label_vector, train_size, split_seed):
     """This function takes as an input the Data Matrix and the
     Label Vector we are working with, shuffles the data according
     to a Seed given as an input and splits according to the proportion
     decided by the user.
     It returns four elements: the training and test Data Matrix,
     the training and testing Label Vectors"""
-    X_train, X_test, y_train, y_test= train_test_split(Data_Matrix, Label_Vector,
-                                                       train_size= Train_Size,
-                                                       random_state= Seed,
+    X_train, X_test, y_train, y_test= train_test_split(data_matrix, 
+                                                       label_vector,
+                                                       train_size= train_size,
+                                                       random_state= split_seed,
                                                        shuffle= True,
-                                                       stratify= Label_Vector)
+                                                       stratify= label_vector)
     return X_train, X_test, y_train, y_test
+
 
 def normalise(X_train, X_test):
     """This function performs a normalisation by subtracting the mean
@@ -57,184 +51,218 @@ def normalise(X_train, X_test):
     # Create a standard processor object
     scaler= StandardScaler()
     # Create an object to transform the data to fit standard processor
-    x_scaled= scaler.fit_transform(X_train)
+    X_scaled= scaler.fit_transform(X_train)
     # Run the normalizer on the dataframes
-    X_train = pd.DataFrame(x_scaled)
+    X_train = pd.DataFrame(X_scaled)
     X_test= pd.DataFrame(scaler.transform(X_test))
     return X_train, X_test
 
-def rename_columns(X_train, X_test, y_train, y_test, Column_Names, Label_Name):
+
+def rename_columns(X_train, X_test, y_train, y_test, feature_names, label_name):
     """This function changes the name of the columns of training and
     data set and of the label vectors, using the same for the two.
     It assumes that Column_Names and Label_Name are tuple of strings of the
     right dimensions."""
-    X_train.columns= Column_Names
-    y_train.columns= Label_Name
-    X_test.columns= Column_Names
-    y_test.columns= Label_Name
+    X_train.columns= feature_names
+    y_train.columns= label_name
+    X_test.columns= feature_names
+    y_test.columns= label_name
     return X_train, X_test, y_train, y_test
 
-def display_data(Data_Matrix, Label_Vector):
+
+def display_data(data_matrix, label_vector):
     """This function allows to visualise the data and print
     some information"""
     print("Printing the first ten rows...")
-    print(Data_Matrix.head(10)) #printing the first ten rows
+    print(data_matrix.head(10)) #printing the first ten rows
     print("\nPrinting summary statistics...")
-    print(Data_Matrix.describe()) #Getting some information
+    print(data_matrix.describe()) #Getting some information
     print("\nPrinting scatterplots considering the class")
-
-    plt.figure(0)
-    pd.plotting.scatter_matrix(Data_Matrix, alpha=0.8, figsize=(6, 6),
-                               diagonal='kde', c= Label_Vector)
+    
+    pd.plotting.scatter_matrix(data_matrix, alpha=0.8, figsize=(6, 6),
+                               diagonal='kde', c= label_vector)
     plt.show()
     plt.close()
 
 
-def preprocess_data(filename, Train_Size, Seed, Column_Names, Label_Name=['Class']):
+def preprocess_data(filename, train_size, split_seed, feature_names, label_name=['Class']):
     """Encapsulating all the work done insofar.
         Taking as input the filename, the relative
         size of the training set, the seed for the
         random reshuffling and the names we are willing to give to the columns"""
     X, y= reading_csv(filename)
-    X_train, X_test, y_train, y_test= split_training(X, y, Train_Size, Seed)
+    X_train, X_test, y_train, y_test= split_training(X, y, train_size, split_seed)
     X_train, X_test= normalise(X_train, X_test)
-    X_train, X_test, y_train, y_test= rename_columns(X_train, X_test, y_train, y_test, Column_Names, Label_Name)
+    X_train, X_test, y_train, y_test= rename_columns(X_train, X_test, y_train, y_test, feature_names, label_name)
     print("Display information for the training set.")
     display_data(X_train, y_train)
     return X_train, X_test, y_train, y_test
 
 
 ############### FUNCTIONS TO COMPUTE THE LOGISTIC REGRESSION ##################
-def logistic_regression_tuning(X_train, y_train, cv_seed, iteration):
+def logistic_regression_tuning(X_train, y_train, kfolds, cv_seed, logistic_iterations):
     """This function trains the hyperparamater of the linear regression
     doing a 5-fold stratified CV with the provided Training data and labels.
     The hyperparameter is obtained by doubling at every iteration the previous one.
     We start with 1 as the first value. The model is returned.
     We set a seed, given as input."""
-    CV_data= []
-    for i in range(0, iteration):
-        inverse_penalisation= pow(2,i)
-        logistic= linear_model.LogisticRegression(penalty='l2',
-                                                  C= inverse_penalisation)
+    cv_data= []
+    for i in range(0, logistic_iterations):
+        inverse_penalisation= pow(2, i)
+        logistic= LogisticRegression(C= inverse_penalisation)
         logistic.fit(X_train, y_train.values.ravel())
-        cv_eval= model_selection.cross_val_score(logistic, X_train,
-                                                 y_train.values.ravel(),
-                                                 cv=StratifiedKFold(n_splits=5,random_state= cv_seed,shuffle=True))
-        CV_data.append([inverse_penalisation, np.mean(cv_eval), np.std(cv_eval), logistic.score(X_train, y_train)])
-    CV_data= pd.DataFrame(CV_data)
-    CV_data.columns= ["InvPenalisation", "CVAccuracy", "CVStd", "TrainAccuracy"]
-    x= np.log(CV_data[["InvPenalisation"]])
-    y_cv= CV_data[["CVAccuracy"]]
-    y_train= CV_data[["TrainAccuracy"]]
+        cv_eval= cross_val_score(logistic, X_train,
+                                 y_train.values.ravel(),
+                                 cv= StratifiedKFold(n_splits= kfolds, random_state= cv_seed, shuffle= True))
+        cv_data.append([inverse_penalisation, np.mean(cv_eval), logistic.score(X_train, y_train)])
+        
+    cv_data= pd.DataFrame(cv_data)
+    cv_data.columns= ["InvPenalisation", "CVAccuracy", "TrainAccuracy"]
 
-    plt.figure(1)
-    plt.plot(x, 1 - y_cv, label= "CV Error")
-    plt.plot(x, 1 - y_train, label= "Train Error")
+    logistic_regression_plotting(np.log(cv_data[["InvPenalisation"]]), 
+                                 cv_data[["CVAccuracy"]],
+                                 cv_data[["TrainAccuracy"]]) 
+    return cv_data
+
+
+def logistic_regression_plotting(inv_penalisations, cv_accuracy, train_accuracy):
+    ax = plt.figure().add_subplot(111)
+    plt.plot(inv_penalisations, 1 - cv_accuracy['CVAccuracy'], label= "CV Error")
+    plt.plot(inv_penalisations, 1 - train_accuracy['TrainAccuracy'], label= "Train Error")
     plt.xlabel("Logarithm of Inverse Penalisation")
     plt.ylabel("Error")
-    plt.title("L2 Logistic Regression Tuning")
+    plt.title("L2 Logistic Regression Regularization")
     plt.legend()
+    # annotate selected inverted penalisation constant
+    idxmin= (1 - cv_accuracy['CVAccuracy']).idxmin()
+    xmin= inv_penalisations['InvPenalisation'][idxmin]
+    ymin= (1 - cv_accuracy['CVAccuracy'])[idxmin]
+    plt.plot([xmin], [ymin], marker='o', markersize=3, color="red")
+    ax.annotate('(%0.3f, %0.3f)' % (xmin, ymin),
+                xy= (xmin, ymin), 
+                xytext= (xmin, ymin-0.0006))
+    plt.savefig('Best C value - L2 Logistic Regression')
     plt.show()
     plt.close()
-    return CV_data
-
-def logistic_fitting(X_train, y_train, CV_data, cv_seed):
+    
+    
+def logistic_regresion_fitting(X_train, y_train, cv_data, kfolds, cv_seed):
     """This function fits the logistic regression considering
     the best value obtained in tuning. It returns the model.
     We set a seed, given as input."""
-    index= CV_data['CVAccuracy'].idxmax()
-    inverse_penalisation= CV_data['InvPenalisation'][index]
-    logistic= linear_model.LogisticRegression(penalty='l2',
-                                                  C= inverse_penalisation)
-    logistic.fit(X_train, y_train.values.ravel())
-    cv_eval= model_selection.cross_val_score(logistic, X_train,
-                                                 y_train.values.ravel(),
-                                                 cv=StratifiedKFold(n_splits=5,random_state= cv_seed,shuffle=True))
-    print("\nLogistic Regression (L2) Tuning:\n\tCV ErrorMean: %3.4f\t Std: %3.4f" % (1 - np.average(cv_eval), np.std(cv_eval)))
-    return logistic
-
-def logistic_regression_training(X_train, y_train, cv_seed, iteration):
+    index= cv_data['CVAccuracy'].idxmax()
+    inverse_penalisation= cv_data['InvPenalisation'][index]
+    logistic_regression= LogisticRegression(C= inverse_penalisation)
+    logistic_regression.fit(X_train, y_train.values.ravel())
+    cv_eval= cross_val_score(logistic_regression, 
+                             X_train,
+                             y_train.values.ravel(),
+                             cv= StratifiedKFold(n_splits= kfolds, random_state= cv_seed, shuffle= True))
+    print("\nLogistic Regression Tuning:\n\t" 
+          "Inverse Penalisation: %d\n\tCV ErrorMean: %3.4f\n\tCV Std: %3.4f" % 
+          (inverse_penalisation, 1 - np.average(cv_eval), np.std(cv_eval))) 
+    return logistic_regression
+  
+    
+def logistic_regression_training(X_train, y_train, kfolds, cv_seed, logistic_iterations):
     """This function wraps the tuning and fitting of the logistic regression.
     It return the model. We set a seed, given as input."""
-    CV_data= logistic_regression_tuning(X_train, y_train, cv_seed, iteration)
-    logistic= logistic_fitting(X_train, y_train, CV_data, cv_seed)
+    cv_data= logistic_regression_tuning(X_train, y_train, kfolds, cv_seed, logistic_iterations)
+    logistic= logistic_regresion_fitting(X_train, y_train, cv_data, kfolds, cv_seed)
     return logistic
 
-def logistic_testing(X_test, y_test, logistic):
+
+def logistic_regression_testing(X_test, y_test, logistic_regression):
     """This function tests the logistic regression provided
     on a given test set. It return the confusion matrix."""
-    y_pred= logistic.predict(X_test)
+    y_pred= logistic_regression.predict(X_test)
     logistic_confusion_matrix= confusion_matrix(y_test, y_pred)
     tn, fp, fn, tp = logistic_confusion_matrix.ravel()
-    print("\nLogistic Regression (L2) Testing:")
+    print("\nL2 Logistic Regression Testing:")
     print("\tTrue Negative: %d" % tn)
     print("\tFalse Positive: %d" % fp)
     print("\tFalse Negative: %d" % fn)
     print("\tTrue Positive: %d" % tp)
-    print("Test Error: \t%3.4f" % (1 - accuracy_score(y_test, y_pred)))
+    print("Test Error: \n\t%3.4f" % (1 - accuracy_score(y_test, y_pred)))
     return logistic_confusion_matrix
 
 
 ########### FUNCTIONS TO COMPUTE THE kNN ######################################
-def knn_tuning(X_train, y_train, cv_seed, maximum_k):
+def knn_tuning(X_train, y_train, kfolds, cv_seed, knn_maximum):
     """This function trains the k-parameter of the kNN
     doing a 5-fold stratified CV with the provided Training data and labels.
     The hyperparameter is obtained by considering the odd sequence up to the
     value provided as input.
     We start with 1 as the first value. The model is returned.
     We set a seed, given as input."""
-    CV_data= []
-    for k_neigh in range(1, maximum_k, 2):
+    cv_data= []
+    for k_neigh in range(1, knn_maximum, 2):
         neigh = KNeighborsClassifier(n_neighbors= k_neigh)
         neigh.fit(X_train, y_train.values.ravel())
-        cv_eval= model_selection.cross_val_score(neigh, X_train,
-                                                 y_train.values.ravel(),
-                                                 cv=StratifiedKFold(n_splits=5,random_state= cv_seed,shuffle=True))
-        CV_data.append([k_neigh, np.mean(cv_eval), np.std(cv_eval), neigh.score(X_train, y_train)])
-    CV_data= pd.DataFrame(CV_data)
-    CV_data.columns= ["k", "CVAccuracy", "CVStd", "TrainAccuracy"]
-    x= CV_data[["k"]]
-    y_cv= CV_data[["CVAccuracy"]]
-    y_train= CV_data[["TrainAccuracy"]]
+        cv_eval= cross_val_score(neigh, X_train,
+                                 y_train.values.ravel(),
+                                 cv=StratifiedKFold(n_splits= kfolds, random_state= cv_seed, shuffle= True))
+        cv_data.append([k_neigh, np.mean(cv_eval), neigh.score(X_train, y_train)])
+        
+    cv_data= pd.DataFrame(cv_data)
+    cv_data.columns= ["k", "CVAccuracy", "TrainAccuracy"]
+    
+    knn_plotting(cv_data[["k"]],
+                 cv_data[["CVAccuracy"]],
+                 cv_data[["TrainAccuracy"]])
+   
+    return cv_data
 
-    plt.figure(3)
+
+def knn_plotting(x, y_cv, y_train):
+    ax = plt.figure().add_subplot(111)
     plt.plot(x, 1 - y_cv, label= "CV Error")
     plt.plot(x, 1 - y_train, label= "Train Error")
     plt.xlabel("Number k of Neighbours")
     plt.ylabel("Error")
     plt.title("k Nearest Neighbours")
     plt.legend()
+    # annotate selected inverted penalisation constant
+    idxmin= (1 - y_cv['CVAccuracy']).idxmin()
+    xmin= x['k'][idxmin]
+    ymin= (1 - y_cv['CVAccuracy'])[idxmin]
+    plt.plot([xmin], [ymin], marker='o', markersize=3, color="red")
+    ax.annotate('(%d, %0.3f)' % (xmin, ymin),
+                xy= (xmin, ymin), 
+                xytext= (xmin, ymin-0.0008))
+    plt.savefig('Best K value - K-nearest Neighbours')
     plt.show()
     plt.close()
-    return CV_data
 
-def knn_fitting(X_train, y_train, CV_data, cv_seed):
+
+def knn_fitting(X_train, y_train, cv_data, kfolds, cv_seed):
     """This function fits the Knn considering
     the best value obtained in tuning. It returns the model.
     We set a seed, given as input."""
-    index= CV_data['CVAccuracy'].idxmax()
-    k_neigh= CV_data['k'][index]
+    index= cv_data['CVAccuracy'].idxmax()
+    k_neigh= cv_data['k'][index]
     neigh = KNeighborsClassifier(n_neighbors= k_neigh)
     neigh.fit(X_train, y_train.values.ravel())
-    cv_eval= model_selection.cross_val_score(neigh, X_train,
-                                                 y_train.values.ravel(),
-                                                 cv=StratifiedKFold(n_splits=5,random_state= cv_seed,shuffle=True))
-    print("\nkNN Tuning:\n\tCV ErrorMean: %3.4f\t Std: %3.4f" % (1 - np.average(cv_eval), np.std(cv_eval)))
+    cv_eval= cross_val_score(neigh, 
+                             X_train,
+                             y_train.values.ravel(),
+                             cv=StratifiedKFold(n_splits= kfolds, random_state= cv_seed, shuffle= True))
+    print("\nkNN Tuning:\n\tCV ErrorMean: %3.4f\t Std: %3.4f" % (1 - np.average(cv_eval), np.std(cv_eval))) 
     return neigh
 
-def knn_training(X_train, y_train, cv_seed, maximum_k):
+
+def knn_training(X_train, y_train, kfolds, cv_seed, knn_maximum):
     """This function wraps the tuning and fitting of the kNN.
     It return the model. We set a seed, given as input."""
-    CV_data= knn_tuning(X_train, y_train, cv_seed, maximum_k)
-
-
-    neigh= knn_fitting(X_train, y_train, CV_data, cv_seed)
+    cv_data= knn_tuning(X_train, y_train, kfolds, cv_seed, knn_maximum)
+    neigh= knn_fitting(X_train, y_train, cv_data, kfolds, cv_seed)
     return neigh
 
-def knn_testing(X_test, y_test, neigh):
+
+def knn_testing(X_test, y_test, knn):
     """This function tests the logistic regression provided
     on a given test set. It return the confusion matrix."""
-    y_pred= neigh.predict(X_test)
+    y_pred= knn.predict(X_test)
     knn_confusion_matrix= confusion_matrix(y_test, y_pred)
     tn, fp, fn, tp = knn_confusion_matrix.ravel()
     print("\nkNN Testing:")
@@ -263,6 +291,7 @@ def separate_classes(X, y):
     X_zero_class= X.iloc[~class_index,:]
     return X_first_class, X_zero_class
 
+
 def log_likelihood(x, X_train, bandwidth, kernel):
     """This function computes the likelihood of a new point considering a kernel"""
     num_dim= X_train.shape[1]
@@ -276,6 +305,7 @@ def log_likelihood(x, X_train, bandwidth, kernel):
         log_dens+= kde.score(x)
     return log_dens
 
+
 def classify(prior_one, prior_zero, likelihood_one, likelihood_zero):
     """This function classifies a point considering the priors
     and the likelihoods"""
@@ -283,6 +313,7 @@ def classify(prior_one, prior_zero, likelihood_one, likelihood_zero):
         return 1
     else:
         return 0
+
 
 def prediction_error(X_train, y_train, X_test, y_test, bandwidth, kernel= 'gaussian'):
     """This function returns the prediction error of a testing set"""
@@ -300,6 +331,7 @@ def prediction_error(X_train, y_train, X_test, y_test, bandwidth, kernel= 'gauss
     #print("Misclassification error: %3.2f" % error)
     return error, y_predict
 
+
 def bayes_cv(X_train, y_train, cv_seed, bandwidth):
     """This function computes the cv error for Naive Bayes."""
     skf = StratifiedKFold(n_splits=5, random_state= cv_seed, shuffle= True)
@@ -310,7 +342,8 @@ def bayes_cv(X_train, y_train, cv_seed, bandwidth):
                                  bandwidth= bandwidth)
         error.append(curr_error)
     error= np.array(error)
-    return(np.mean(error), np.std(error))
+    return (np.mean(error), np.std(error))
+
 
 def bayes_tuning(X_train, y_train, cv_seed, bandwidth_max):
     """This function is to tune the bandwidth parameter for Bayes Naive
@@ -332,6 +365,7 @@ def bayes_tuning(X_train, y_train, cv_seed, bandwidth_max):
     plt.close()
     return cv_error
 
+
 def bayes_testing(X_train, y_train, X_test, y_test, cv_bayes, kernel= 'gaussian'):
     """This function returns the prediction for the testing set"""
     bandwidth= cv_bayes[:,0].min()
@@ -340,20 +374,31 @@ def bayes_testing(X_train, y_train, X_test, y_test, cv_bayes, kernel= 'gaussian'
     bayes_confusion_matrix= confusion_matrix(y_test, y_predicted)
     return test_error, bayes_confusion_matrix
 
-filename= 'TP1-data.csv'
-Train_Size= 0.66
-Seed= 10182017
-Column_Names= ['Variance', 'Skewness', 'Curtosis', 'Entropy']
-X_train, X_test, y_train, y_test= preprocess_data(filename, Train_Size, Seed, Column_Names)
 
-cv_seed= 52222
-logistic= logistic_regression_training(X_train, y_train, cv_seed, 20)
-logistic_confusion_matrix= logistic_testing(X_test, y_test, logistic)
+def main():
+    filename= 'TP1-data.csv'
+    feature_names= ['Variance', 'Skewness', 'Curtosis', 'Entropy']
+    train_size= 2/3
+    split_seed= 10182017
+    kfolds= 5
+    cv_seed= 52222
+    logistic_iterations= 20
+    knn_maximum= 40
+    
+    # Load and preprocess data
+    X_train, X_test, y_train, y_test= preprocess_data(filename, train_size, split_seed, feature_names)
+    
+    # Logistic Regression Classifier
+    logistic_regression= logistic_regression_training(X_train, y_train, kfolds, cv_seed, logistic_iterations)
+    logistic_regression_confusion_matrix= logistic_regression_testing(X_test, y_test, logistic_regression)
+    
+    # K-nearest Neighbours Classifier
+    knn= knn_training(X_train, y_train, kfolds, cv_seed, knn_maximum)
+    knn_confusion_matrix= knn_testing(X_test, y_test, knn)
 
-
-neigh= knn_training(X_train, y_train, cv_seed, 40)
-knn_confusion_matrix= knn_testing(X_test, y_test, neigh)
-
-
-cv_bayes= bayes_tuning(X_train, y_train, cv_seed, 2)
-bayes_error, bayes_confusion_matrix= bayes_testing(X_train, y_train, X_test, y_test, cv_bayes)
+    # Naive Bayes Classifier
+    cv_bayes= bayes_tuning(X_train, y_train, cv_seed, 2)
+    bayes_error, bayes_confusion_matrix= bayes_testing(X_train, y_train, X_test, y_test, cv_bayes)
+    
+    
+main()
