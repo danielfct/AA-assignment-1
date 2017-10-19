@@ -242,6 +242,7 @@ def knn_testing(X_test, y_test, neigh):
     print("\tFalse Negative: %d" % fn)
     print("\tTrue Positive: %d" % tp)
     print("Error: \t%3.4f" % (1 - accuracy_score(y_test, y_pred)))
+    print("\n")
     return knn_confusion_matrix
 
 
@@ -307,7 +308,17 @@ def bayes_tuning(X_train, y_train, cv_seed, bandwidth_max):
         print("Current Bandwidth %3.2f" % i)
         curr_cv_error= bayes_cv(X_train, y_train, cv_seed, i)
         cv_error.append(curr_cv_error)
-    return np.array(cv_error)
+    
+    cv_error= np.array(cv_error)
+    plt.figure(4)
+    plt.plot(np.arange(0.01, bandwidth_max, 0.02), cv_error[:,0], label= "CV Error")
+    plt.xlabel("Bandwidth")
+    plt.ylabel("Error")
+    plt.title("Nonparamentric Naive Bayes")
+    plt.legend()
+    plt.show()
+    plt.close()
+    return cv_error
 
 def bayes_testing(X_train, y_train, X_test, y_test, cv_bayes, kernel= 'gaussian'):
     bandwidth= cv_bayes[:,0].min()
@@ -325,10 +336,11 @@ cv_seed= 52222
 logistic= logistic_regression_training(X_train, y_train, cv_seed, 20)
 logistic_confusion_matrix= logistic_testing(X_test, y_test, logistic)
 
+
 neigh= knn_training(X_train, y_train, cv_seed, 40)
 knn_confusion_matrix= knn_testing(X_test, y_test, neigh)
 
 
-cv_bayes= bayes_tuning(X_train, y_train, cv_seed, 1)
+cv_bayes= bayes_tuning(X_train, y_train, cv_seed, 2)
 bayes_error= bayes_testing(X_train, y_train, X_test, y_test, cv_bayes)
 
