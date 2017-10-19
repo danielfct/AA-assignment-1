@@ -188,7 +188,7 @@ def logistic_regression_testing(X_test, y_test, logistic_regression):
 
 
 ########### FUNCTIONS TO COMPUTE THE kNN ######################################
-def knn_tuning(X_train, y_train, kfolds, cv_seed, knn_maximum):
+def knn_tuning(X_train, y_train, kfolds, cv_seed, knn_max):
     """This function trains the k-parameter of the kNN
     doing a 5-fold stratified CV with the provided Training data and labels.
     The hyperparameter is obtained by considering the odd sequence up to the
@@ -196,7 +196,7 @@ def knn_tuning(X_train, y_train, kfolds, cv_seed, knn_maximum):
     We start with 1 as the first value. The model is returned.
     We set a seed, given as input."""
     cv_data= []
-    for k_neigh in range(1, knn_maximum, 2):
+    for k_neigh in range(1, knn_max, 2):
         neigh = KNeighborsClassifier(n_neighbors= k_neigh)
         neigh.fit(X_train, y_train.values.ravel())
         cv_eval= cross_val_score(neigh, X_train,
@@ -251,10 +251,10 @@ def knn_fitting(X_train, y_train, cv_data, kfolds, cv_seed):
     return neigh
 
 
-def knn_training(X_train, y_train, kfolds, cv_seed, knn_maximum):
+def knn_training(X_train, y_train, kfolds, cv_seed, knn_max):
     """This function wraps the tuning and fitting of the kNN.
     It return the model. We set a seed, given as input."""
-    cv_data= knn_tuning(X_train, y_train, kfolds, cv_seed, knn_maximum)
+    cv_data= knn_tuning(X_train, y_train, kfolds, cv_seed, knn_max)
     neigh= knn_fitting(X_train, y_train, cv_data, kfolds, cv_seed)
     return neigh
 
@@ -383,7 +383,8 @@ def main():
     kfolds= 5
     cv_seed= 52222
     logistic_iterations= 20
-    knn_maximum= 40
+    knn_max= 40
+    bandwidth_max= 1
     
     # Load and preprocess data
     X_train, X_test, y_train, y_test= preprocess_data(filename, train_size, split_seed, feature_names)
@@ -393,11 +394,11 @@ def main():
     logistic_regression_confusion_matrix= logistic_regression_testing(X_test, y_test, logistic_regression)
     
     # K-nearest Neighbours Classifier
-    knn= knn_training(X_train, y_train, kfolds, cv_seed, knn_maximum)
+    knn= knn_training(X_train, y_train, kfolds, cv_seed, knn_max)
     knn_confusion_matrix= knn_testing(X_test, y_test, knn)
 
     # Naive Bayes Classifier
-    cv_bayes= bayes_tuning(X_train, y_train, cv_seed, 2)
+    cv_bayes= bayes_tuning(X_train, y_train, cv_seed, bandwidth_max)
     bayes_error, bayes_confusion_matrix= bayes_testing(X_train, y_train, X_test, y_test, cv_bayes)
     
     
