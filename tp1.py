@@ -402,7 +402,7 @@ def compare_classifiers(logistic_regression_confusion_matrix,
 def main():
     filename= 'TP1-data.csv'
     feature_names= ['Variance', 'Skewness', 'Curtosis', 'Entropy']
-    train_size= 2/3
+    train_size= 2./3.
     split_seed= 10182017
     kfolds= 5
     cv_seed= 52222
