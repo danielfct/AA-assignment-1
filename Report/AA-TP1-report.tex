@@ -8,9 +8,12 @@
 
 %% Sets page size and margins
 \usepackage[a4paper,top=3cm,bottom=3cm,left=3cm,right=3cm,marginparwidth=1.75cm]{geometry}
+%% To use hyperlinks
+\usepackage{hyperref}
+%% To use colors
+\usepackage[usenames,dvipsnames,svgnames,table]{xcolor}
 
-
-\title{Aprendizagem Automática \\
+\title{\textbf{Aprendizagem Automática} \\
 \large Assignment 1 - Classifiers}
 
 \author{Andrea Mascaretti N52222\and Daniel Pimenta N45404}
@@ -19,7 +22,9 @@
 \maketitle
 
 \begin{abstract}
-WRITE ABOUT THE GOAL OF THIS ASSIGNMENT AND TECHNOLOGIES USED\\
+The main goal of this assignment was the parameterization, fitting and comparation of Logistic Regression, K-nearest Neighbours and Naive Bayes classifiers.\\ 
+The data set used was the banknote authentication which was obtained from the \hyperref['https://archive.ics.uci.edu/ml/datasets/banknote+authentication]{UCI machine learning repository}.\\
+To achieve our goals we used the Spyder IDE with programming language Python 3.6 and some of its modules such as \textit{Panda} to load and manage our data, \textit{NumPy} which is the fundamental package for scientific computing with Python and was used for various mathematical calculations and managing multidimensional arrays, \textit{sklearn (scikit-learn)} which has efficient tools for data mining and data analysis used in our assignment to preprocess data (shuffle, standardize, split), fold our data into k stratified folds, calculate cross validation score and fit our data on Logistic Regression and K-nearest Neighbours classifiers. Another imported module was Matplotlib.Pyplot which provides a MATLAB-like plotting framework used to build the error plots. 
 \end{abstract}
 
 \section{Introduction}
@@ -55,4 +60,3 @@ WHAT WAS ACHIEVED AND WHAT WE LEARNT\\
 \end{itemize}
 
 \end{document}
-
