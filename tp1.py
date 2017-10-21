@@ -389,10 +389,7 @@ def bayes_plotting(optimal_bandwidth, min_cv_error, bandwidths, cv_error):
 
 ########################MCNEMAR ###############################################
 def mc_nemar_test(e01, e10):
-    if (e01+e10 == 0):
-        return None
-    else:
-        return pow((abs(e01 - e10) - 1), 2) / (e01 + e10)
+    return pow((abs(e01 - e10) - 1), 2) / (e01 + e10)
 
 def compare_classifiers(first_clf_pred, second_clf_pred, y_test):
     e01 = e10 = 0
@@ -406,7 +403,10 @@ def compare_classifiers(first_clf_pred, second_clf_pred, y_test):
         if (curr_first_pred-curr_correct_class == 0 and abs(curr_second_pred-curr_correct_class) == 1):
             e10 += 1
    
-    return mc_nemar_test(e01, e10);
+    if (e10 + e10 == 0):
+        return None
+    else:
+        return mc_nemar_test(e01, e10);
 
 def main():
     filename= 'TP1-data.csv'
@@ -450,17 +450,24 @@ def main():
                                        y_test)
     
     print("\nMcNemar tests:")
-    print("\tLogistic Regression VS K-nearest neighbours: %0.3f\n" % lr_vs_knn)
-    print("\tLogistic Regression VS Naive Bayes: %0.3f\n" % lr_vs_bayes)
-    print("\tK-nearest neighbours VS Naive Bayes: %0.3f\n" % knn_vs_bayes)
+    
+    print("\tLogistic Regression VS K-nearest neighbours:\n")
+    if (lr_vs_knn == None):
+        print("\tNot applicable\n")
+    else:
+        print("%0.3f\n" % lr_vs_knn)
+        
+    print("\tLogistic Regression VS Naive Bayes:\n")
+    if (lr_vs_bayes == None):
+        print("\tNot applicable\n")
+    else:
+        print("%0.3f\n" % lr_vs_bayes)
+        
+    print("\tK-nearest neighbours VS Naive Bayes:\n")
+    if (knn_vs_bayes == None):
+        print("\tNot applicable\n")
+    else:
+        print("%0.3f\n" % knn_vs_bayes)
 
     
 main()
-
-
-#class NaiveBayes:
-   # score: accuracy_score(y_train.iloc[valid,:], y_predict)
- #    knn.predict(X_test)
-  #  knn.fit(X_train, y_train.values.ravel())
-   #  def predict(self):
-    #    return 'hello world'
