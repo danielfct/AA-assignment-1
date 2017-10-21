@@ -327,7 +327,6 @@ def bayes_classify(K, h, X_train, Y_train, X_test):
 
 def bayes_cv_with_bandwidth(K, h, X_train, y_train, kfolds, cv_seed):
     """This function computes the cv error for Naive Bayes."""
-    print("\n\nTraining BAYES")
     skf = StratifiedKFold(n_splits= kfolds, random_state= cv_seed, shuffle= True)
     errors= []
     for train, test in skf.split(X_train, y_train.values.ravel()):
@@ -343,6 +342,7 @@ def bayes_cv_with_bandwidth(K, h, X_train, y_train, kfolds, cv_seed):
     return np.mean(errors), np.std(errors)
     
 def bayes_cv(K, max_h, X_train, y_train, kfolds, cv_seed):
+    print("\n\nTraining BAYES")
     cv_error= []
     for curr_bandwidth in np.arange(0.01, max_h, 0.01):
         print("Current Bandwidth %3.2f" % curr_bandwidth)
