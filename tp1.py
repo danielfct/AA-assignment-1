@@ -281,93 +281,82 @@ def knn_testing(X_test, y_test, knn):
 
 
 ####### FUNCTIONS TO IMPLEMENT NAIVE BAYES ####################################
-def compute_log_priors(y_train):
+def log_priors(Y_train):
     """This function compute the logarithm of the priors by taking the ratio
     of classes in the training set"""
-    first_class= np.sum(y_train) / y_train.shape[0]
-    zero_class= 1 - first_class
-    return np.array(np.log(first_class)), np.array(np.log(zero_class))
+    first_class= np.sum(Y_train) / Y_train.shape[0]
+    return np.log(first_class), np.log(1 - first_class)
 
 def separate_classes(X, y):
     """This function separates a data matrix according to the class label.
     It returns the separated databases"""
-    class_index= (y == 1).values.ravel()
+    class_index= (y == 1)
     X_first_class= X.iloc[class_index,:]
     X_zero_class= X.iloc[~class_index,:]
     return X_first_class, X_zero_class
 
+def log_likelihoods(K, h, X_train, Y_train, x_test):
+    loglikelihood_first= np.zeros(1)
+    loglikelihood_zero= np.zeros(1)
+    n_dim= X_train.shape[1]
+    for i in range(n_dim):
+        X_train_first, X_train_zero= separate_classes(X_train, Y_train)
+        kde_first= KernelDensity(bandwidth= h, kernel= K)
+        kde_zero= KernelDensity(bandwidth= h, kernel= K)
+        kde_first.fit(X_train_first)
+        kde_zero.fit(X_train_zero)
+        loglikelihood_first+= kde_first.score_samples(x_test.reshape(1, 4))
+        loglikelihood_zero+= kde_zero.score_samples(x_test.reshape(1, 4))
+    return loglikelihood_first, loglikelihood_zero
 
-def log_likelihood(x, X_train, bandwidth, kernel):
-    """This function computes the likelihood of a new point considering a kernel"""
-    x= np.array(x)[:, np.newaxis]
-    log_dens= np.zeros(1)
-    for i in range(0, X_train.shape[1]):
-        kde= KernelDensity(bandwidth= bandwidth, kernel= kernel)
-        feature= np.array(X_train.iloc[:,i])
-        feature= np.array(feature)[:, np.newaxis]
-        kde.fit(feature)
-        log_dens+= kde.score(x)
-    return log_dens
-
-
-def classify(prior_one, prior_zero, likelihood_one, likelihood_zero):
-    """This function classifies a point considering the priors
-    and the likelihoods"""
-    if (prior_one + likelihood_one) > (prior_zero + likelihood_zero):
+def bayes_classify_point(K, h, X_train, Y_train, x_test):
+    log_prior_first, log_prior_zero= log_priors(Y_train)
+    log_likelihood_first, loglikelihood_zero= log_likelihoods(K, h, X_train, Y_train, x_test)
+    if (log_prior_first + log_likelihood_first) > (log_prior_zero + loglikelihood_zero):
         return 1
     else:
         return 0
 
-def bayes_predict(X_train, y_train, X_test, bandwidth, kernel= 'gaussian'):
-    """This function returns the prediction error of a testing set"""
-    prior_one, prior_zero= compute_log_priors(y_train)
-    X_one, X_zero= separate_classes(X_train, y_train)
-    y_predict= []
-    for i in range(0, X_test.shape[0]):
-        current_X= np.array(X_test.iloc[i,:])
-        likelihood_one= log_likelihood(current_X, X_one, bandwidth, kernel)
-        likelihood_zero= log_likelihood(current_X, X_zero, bandwidth, kernel)
-        classification = classify(prior_one, prior_zero, likelihood_one, likelihood_zero)
-        y_predict.append(classification)
-        
-    return np.array(y_predict)
+def bayes_classify(K, h, X_train, Y_train, X_test):
+    n_rows= X_test.shape[0]
+    Y_predict= np.zeros(n_rows)
+    for row in range(n_rows):
+        X_test_classify= X_test.iloc[row, :].values.ravel()
+        Y_predict[row]= bayes_classify_point(K, h, X_train, Y_train, X_test_classify)
+    return Y_predict
 
-def bayes_cv(X_train, y_train, kfolds, cv_seed, bandwidth):
+def bayes_cv_with_bandwidth(K, h, X_train, y_train, kfolds, cv_seed):
     """This function computes the cv error for Naive Bayes."""
     skf = StratifiedKFold(n_splits= kfolds, random_state= cv_seed, shuffle= True)
-    cv_evals= []
-    for train, valid in skf.split(X_train, y_train.values.ravel()):
-        y_predict= bayes_predict(X_train.iloc[train,:], 
-                           y_train.iloc[train,:],
-                           X_train.iloc[valid,:],
-                           bandwidth= bandwidth)
-        cv_eval = accuracy_score(y_train.iloc[valid,:], y_predict)
-        cv_evals.append(cv_eval)
-    
-    return np.array(cv_evals)
+    errors= []
+    for train, test in skf.split(X_train, y_train.values.ravel()):
+        y_testcv= y_train.iloc[test,:]
+        X_testcv= X_train.iloc[test,:]
+        y_traincv= y_train.iloc[train,:]
+        X_traincv= X_train.iloc[train,:]
+        y_predictedcv= bayes_classify(K, h, X_traincv, y_traincv.values.ravel(), X_testcv)
 
-def bayes_tuning(X_train, y_train, kfolds, cv_seed, bandwidth_max):
-    """This function is to tune the bandwidth parameter for Naive Bayes
-    Classifier"""
-    cv_data= []
-    bandwidths= np.arange(0.01, bandwidth_max, 0.02)
-    for bandwidth in bandwidths:
-        print("Current Bandwidth %3.2f" % bandwidth)
-        cv_eval= bayes_cv(X_train, y_train, kfolds, cv_seed, bandwidth)
-        #cv_data.append([k_neigh, np.mean(cv_eval), bayes.score(X_train, y_train)])
-        cv_data.append([bandwidth, 1-np.mean(cv_eval)])
-   
-    cv_data= pd.DataFrame(cv_data)
-    cv_data.columns= ["bandwidth", "CvError"]
+        errors.append(1 - accuracy_score(y_testcv, y_predictedcv))
+        #test
+        print(accuracy_score(y_testcv, y_predictedcv))
+    return np.mean(errors), np.std(errors)
     
-    minIdx= cv_data['CvError'].idxmin()
-    optimal_bandwidth= cv_data['bandwidth'].iloc[minIdx]
-    min_cv_error= cv_data['CvError'].iloc[minIdx]
-    bayes_plotting(optimal_bandwidth, min_cv_error, 
-                   cv_data[["bandwidth"]],
-                   cv_data[["CvError"]])
-    
-    return optimal_bandwidth, cv_data
+def bayes_cv(K, max_h, X_train, y_train, kfolds, cv_seed):
+    cv_error= []
+    for curr_bandwidth in np.arange(0.01, max_h, 0.01):
+        print("Current Bandwidth %3.2f" % curr_bandwidth)
+        curr_err, curr_std= bayes_cv_with_bandwidth(K, curr_bandwidth, X_train, y_train, kfolds, cv_seed)
+        cv_error.append([curr_bandwidth, curr_err, curr_std])
+    return np.array(cv_error)
+
+def bayes_tuning(cv_error):
+    index_best= cv_error[:,1].argmin()
+    return cv_error[index_best, 0]
+
+def bayes_test(K, h, X_train, Y_train, X_test, Y_test):
+    Y_predict= bayes_classify(K, h, X_train, Y_train.values.ravel(), X_test)
+    bayes_confusion_matrix= confusion_matrix(Y_test, Y_predict)
+    return bayes_confusion_matrix
 
 def bayes_plotting(optimal_bandwidth, min_cv_error, bandwidths, cv_error):
     fig = plt.figure()
@@ -386,20 +375,9 @@ def bayes_plotting(optimal_bandwidth, min_cv_error, bandwidths, cv_error):
     plt.show()
     plt.close()
 
-def bayes_testing(X_train, y_train, X_test, y_test, bandwidth, kernel= 'gaussian'):
-    """This function returns the prediction for the testing set"""
-    y_predict= bayes_predict(X_train, y_train, X_test, bandwidth=bandwidth)
-    bayes_confusion_matrix= confusion_matrix(y_test, y_predict)
-    tn, fp, fn, tp = bayes_confusion_matrix.ravel()
-    print("Naive Bayes Testing:\n"
-          "\tTrue Negative: %d\n"
-          "\tFalse Positive: %d\n"
-          "\tFalse Negative: %d\n"
-          "\tTrue Positive: %d\n"
-          "\tTest Error: %3.4f" % (tn, fp, fn, tp, 1-accuracy_score(y_test, y_predict)))
-    
-    return bayes_confusion_matrix 
 
+
+########################MCNEMAR ###############################################
 def mc_nemar_test(e01, e10):
     return pow((abs(e01 - e10) - 1), 2) / (e01 + e10)
 

@@ -196,7 +196,7 @@ feature_names= ['Variance', 'Skewness', 'Curtosis', 'Entropy']
 train_size= 2./3.
 split_seed= 10182017
 kfolds= 5
-cv_seed= 52222
+cv_seed= 522224
 
     
 # Load and preprocess data
