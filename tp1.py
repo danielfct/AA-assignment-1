@@ -114,61 +114,63 @@ def logistic_regression_tuning(X_train, y_train, kfolds, cv_seed, logistic_itera
         cv_eval= cross_val_score(logistic, X_train,
                                  y_train.values.ravel(),
                                  cv= StratifiedKFold(n_splits= kfolds, random_state= cv_seed, shuffle= True))
-        cv_data.append([inverse_penalisation, np.mean(cv_eval), logistic.score(X_train, y_train)])
+        cv_data.append([np.log(inverse_penalisation), 1-np.mean(cv_eval), 1-logistic.score(X_train, y_train)])
         
     cv_data= pd.DataFrame(cv_data)
-    cv_data.columns= ["InvPenalisation", "CVAccuracy", "TrainAccuracy"]
+    cv_data.columns= ["InvPenalisation", "CvError", "TrainError"]
 
-    logistic_regression_plotting(np.log(cv_data[["InvPenalisation"]]), 
-                                 cv_data[["CVAccuracy"]],
-                                 cv_data[["TrainAccuracy"]]) 
-    return cv_data
+    idxmin= cv_data['CvError'].idxmin()
+    optimal_c= cv_data['InvPenalisation'].iloc[idxmin]
+    min_cv_error= cv_data['CvError'].iloc[idxmin]
+    logistic_regression_plotting(optimal_c, min_cv_error, 
+                                 cv_data[["InvPenalisation"]], 
+                                 cv_data[["CvError"]],
+                                 cv_data[["TrainError"]]) 
+    return optimal_c, cv_data
 
 
-def logistic_regression_plotting(inv_penalisations, cv_accuracy, train_accuracy):
+def logistic_regression_plotting(optimal_c, min_cv_error, inv_penalisations, cv_error, train_error):
+    
     ax = plt.figure().add_subplot(111)
-    plt.plot(inv_penalisations, 1 - cv_accuracy['CVAccuracy'], label= "CV Error")
-    plt.plot(inv_penalisations, 1 - train_accuracy['TrainAccuracy'], label= "Train Error")
+    plt.plot(inv_penalisations, cv_error['CvError'], label= "CV Error")
+    plt.plot(inv_penalisations, train_error['TrainError'], label= "Train Error")
     plt.xlabel("Logarithm of Inverse Penalisation")
     plt.ylabel("Error")
     plt.title("L2 Logistic Regression Regularization")
     plt.legend()
     # annotate selected k value
-    idxmin= (1 - cv_accuracy['CVAccuracy']).idxmin()
-    xmin= inv_penalisations['InvPenalisation'][idxmin]
-    ymin= (1 - cv_accuracy['CVAccuracy'])[idxmin]
-    plt.plot([xmin], [ymin], marker='o', markersize=3, color="red")
-    ax.annotate('(%0.3f, %0.3f)' % (xmin, ymin),
-                xy= (xmin, ymin), 
-                xytext= (xmin, ymin-0.0006))
+    plt.plot([optimal_c], [min_cv_error], marker='o', markersize=3, color="red")
+    ax.annotate('(%0.3f, %0.3f)' % (optimal_c, min_cv_error),
+                xy= (optimal_c, min_cv_error), 
+                xytext= (optimal_c, min_cv_error-0.0006))
     plt.savefig('Best C value - L2 Logistic Regression')
     plt.show()
     plt.close()
     
     
-def logistic_regresion_fitting(X_train, y_train, cv_data, kfolds, cv_seed):
+def logistic_regresion_fitting(X_train, y_train, cv_data, kfolds, cv_seed, optimal_c):
     """This function fits the logistic regression considering
     the best value obtained in tuning. It returns the model.
     We set a seed, given as input."""
-    index= cv_data['CVAccuracy'].idxmax()
-    inverse_penalisation= cv_data['InvPenalisation'][index]
-    logistic_regression= LogisticRegression(C= inverse_penalisation)
+    logistic_regression= LogisticRegression(C= optimal_c)
     logistic_regression.fit(X_train, y_train.values.ravel())
     cv_eval= cross_val_score(logistic_regression, 
                              X_train,
                              y_train.values.ravel(),
                              cv= StratifiedKFold(n_splits= kfolds, random_state= cv_seed, shuffle= True))
-    print("\nLogistic Regression Tuning:\n\t" 
-          "Inverse Penalisation: %d\n\tCV ErrorMean: %3.4f\n\tCV Std: %3.4f" % 
-          (inverse_penalisation, 1 - np.average(cv_eval), np.std(cv_eval))) 
+    print("\nL2 Logistic Regression Tuning:\n" 
+          "\tOptimal Inverse C: %d\n"
+          "\tCV Error Mean: %3.4f\n"
+          "\tCV Error Std: %3.4f" % 
+          (optimal_c, 1 - np.average(cv_eval), np.std(cv_eval))) 
     return logistic_regression
   
     
 def logistic_regression_training(X_train, y_train, kfolds, cv_seed, logistic_iterations):
     """This function wraps the tuning and fitting of the logistic regression.
     It return the model. We set a seed, given as input."""
-    cv_data= logistic_regression_tuning(X_train, y_train, kfolds, cv_seed, logistic_iterations)
-    logistic= logistic_regresion_fitting(X_train, y_train, cv_data, kfolds, cv_seed)
+    optimal_c, cv_data= logistic_regression_tuning(X_train, y_train, kfolds, cv_seed, logistic_iterations)
+    logistic= logistic_regresion_fitting(X_train, y_train, cv_data, kfolds, cv_seed, optimal_c)
     return logistic
 
 
@@ -178,12 +180,12 @@ def logistic_regression_testing(X_test, y_test, logistic_regression):
     y_pred= logistic_regression.predict(X_test)
     logistic_confusion_matrix= confusion_matrix(y_test, y_pred)
     tn, fp, fn, tp = logistic_confusion_matrix.ravel()
-    print("\nL2 Logistic Regression Testing:")
-    print("\tTrue Negative: %d" % tn)
-    print("\tFalse Positive: %d" % fp)
-    print("\tFalse Negative: %d" % fn)
-    print("\tTrue Positive: %d" % tp)
-    print("Test Error: \n\t%3.4f" % (1 - accuracy_score(y_test, y_pred)))
+    print("\nL2 Logistic Regression Testing:\n"
+          "\tTrue Negative: %d\n"
+          "\tFalse Positive: %d\n"
+          "\tFalse Negative: %d\n"
+          "\tTrue Positive: %d\n"
+          "\tTest Error: %3.4f" % (tn, fp, fn, tp, 1-accuracy_score(y_test, y_pred)))
     return logistic_confusion_matrix
 
 
@@ -197,65 +199,69 @@ def knn_tuning(X_train, y_train, kfolds, cv_seed, knn_max):
     We set a seed, given as input."""
     cv_data= []
     for k_neigh in range(1, knn_max, 2):
-        neigh = KNeighborsClassifier(n_neighbors= k_neigh)
-        neigh.fit(X_train, y_train.values.ravel())
-        cv_eval= cross_val_score(neigh, X_train,
+        knn = KNeighborsClassifier(n_neighbors= k_neigh)
+        knn.fit(X_train, y_train.values.ravel())
+        cv_eval= cross_val_score(knn, 
+                                 X_train,
                                  y_train.values.ravel(),
                                  cv=StratifiedKFold(n_splits= kfolds, random_state= cv_seed, shuffle= True))
-        cv_data.append([k_neigh, np.mean(cv_eval), neigh.score(X_train, y_train)])
+        cv_data.append([k_neigh, 1-np.mean(cv_eval), 1-knn.score(X_train, y_train)])
         
     cv_data= pd.DataFrame(cv_data)
-    cv_data.columns= ["k", "CVAccuracy", "TrainAccuracy"]
+    cv_data.columns= ["k", "CvError", "TrainError"]
     
-    knn_plotting(cv_data[["k"]],
-                 cv_data[["CVAccuracy"]],
-                 cv_data[["TrainAccuracy"]])
+    minIdx= cv_data['CvError'].idxmin()
+    optimal_k= cv_data['k'].iloc[minIdx]
+    min_cv_error= cv_data['CvError'].iloc[minIdx]
+    knn_plotting(optimal_k, min_cv_error,
+                 cv_data[["k"]],
+                 cv_data[["CvError"]],
+                 cv_data[["TrainError"]])
    
-    return cv_data
+    return optimal_k, cv_data
 
 
-def knn_plotting(x, y_cv, y_train):
-    ax = plt.figure().add_subplot(111)
-    plt.plot(x, 1 - y_cv, label= "CV Error")
-    plt.plot(x, 1 - y_train, label= "Train Error")
+def knn_plotting(optimal_k, min_cv_error, neighbours, cv_error, train_error):
+    fig = plt.figure()
+    ax = fig.add_subplot(111)
+    plt.plot(neighbours, cv_error, label= "CV Error")
+    plt.plot(neighbours, train_error, label= "Train Error")
     plt.xlabel("Number k of Neighbours")
     plt.ylabel("Error")
     plt.title("k Nearest Neighbours")
     plt.legend()
-    # annotate selected inverted penalisation constant
-    idxmin= (1 - y_cv['CVAccuracy']).idxmin()
-    xmin= x['k'][idxmin]
-    ymin= (1 - y_cv['CVAccuracy'])[idxmin]
-    plt.plot([xmin], [ymin], marker='o', markersize=3, color="red")
-    ax.annotate('(%d, %0.3f)' % (xmin, ymin),
-                xy= (xmin, ymin), 
-                xytext= (xmin, ymin-0.0008))
-    plt.savefig('Best K value - K-nearest Neighbours')
+    # annotate selected k value
+    plt.plot([optimal_k], [min_cv_error], marker='o', markersize=3, color="red")
+    ax.annotate('(%d, %0.3f)' % (optimal_k, min_cv_error),
+                xy= (optimal_k, min_cv_error), 
+                xytext= (optimal_k, min_cv_error-0.0008))
+#    plt.savefig('Best K value - K-nearest Neighbours')
     plt.show()
     plt.close()
 
 
-def knn_fitting(X_train, y_train, cv_data, kfolds, cv_seed):
+def knn_fitting(X_train, y_train, cv_data, kfolds, cv_seed, optimal_k):
     """This function fits the Knn considering
     the best value obtained in tuning. It returns the model.
     We set a seed, given as input."""
-    index= cv_data['CVAccuracy'].idxmax()
-    k_neigh= cv_data['k'][index]
-    neigh = KNeighborsClassifier(n_neighbors= k_neigh)
-    neigh.fit(X_train, y_train.values.ravel())
-    cv_eval= cross_val_score(neigh, 
+    knn = KNeighborsClassifier(n_neighbors= optimal_k)
+    knn.fit(X_train, y_train.values.ravel())
+    cv_eval= cross_val_score(knn, 
                              X_train,
                              y_train.values.ravel(),
                              cv=StratifiedKFold(n_splits= kfolds, random_state= cv_seed, shuffle= True))
-    print("\nkNN Tuning:\n\tCV ErrorMean: %3.4f\t Std: %3.4f" % (1 - np.average(cv_eval), np.std(cv_eval))) 
-    return neigh
+    print("\nkNN Tuning:\n"
+          "\tOptimal K: %d\n"
+          "\tCV Error Mean: %3.4f\n"
+          "\tCV Error Std: %3.4f" % (optimal_k, 1-np.average(cv_eval), np.std(cv_eval))) 
+    return knn
 
 
 def knn_training(X_train, y_train, kfolds, cv_seed, knn_max):
     """This function wraps the tuning and fitting of the kNN.
     It return the model. We set a seed, given as input."""
-    cv_data= knn_tuning(X_train, y_train, kfolds, cv_seed, knn_max)
-    neigh= knn_fitting(X_train, y_train, cv_data, kfolds, cv_seed)
+    optimal_k, cv_data= knn_tuning(X_train, y_train, kfolds, cv_seed, knn_max)
+    neigh= knn_fitting(X_train, y_train, cv_data, kfolds, cv_seed, optimal_k)
     return neigh
 
 
@@ -265,13 +271,12 @@ def knn_testing(X_test, y_test, knn):
     y_pred= knn.predict(X_test)
     knn_confusion_matrix= confusion_matrix(y_test, y_pred)
     tn, fp, fn, tp = knn_confusion_matrix.ravel()
-    print("\nkNN Testing:")
-    print("\tTrue Negative: %d" % tn)
-    print("\tFalse Positive: %d" % fp)
-    print("\tFalse Negative: %d" % fn)
-    print("\tTrue Positive: %d" % tp)
-    print("Error: \t%3.4f" % (1 - accuracy_score(y_test, y_pred)))
-    print("\n")
+    print("\nkNN Testing:\n"
+          "\tTrue Negative: %d\n"
+          "\tFalse Positive: %d\n"
+          "\tFalse Negative: %d\n"
+          "\tTrue Positive: %d\n"
+          "\tTest Error: %3.4f" % (tn, fp, fn, tp, 1-accuracy_score(y_test, y_pred)))
     return knn_confusion_matrix
 
 
@@ -294,10 +299,9 @@ def separate_classes(X, y):
 
 def log_likelihood(x, X_train, bandwidth, kernel):
     """This function computes the likelihood of a new point considering a kernel"""
-    num_dim= X_train.shape[1]
     x= np.array(x)[:, np.newaxis]
     log_dens= np.zeros(1)
-    for i in range(0, num_dim):
+    for i in range(0, X_train.shape[1]):
         kde= KernelDensity(bandwidth= bandwidth, kernel= kernel)
         feature= np.array(X_train.iloc[:,i])
         feature= np.array(feature)[:, np.newaxis]
@@ -314,68 +318,88 @@ def classify(prior_one, prior_zero, likelihood_one, likelihood_zero):
     else:
         return 0
 
-
-def prediction_error(X_train, y_train, X_test, y_test, bandwidth, kernel= 'gaussian'):
+def bayes_predict(X_train, y_train, X_test, bandwidth, kernel= 'gaussian'):
     """This function returns the prediction error of a testing set"""
     prior_one, prior_zero= compute_log_priors(y_train)
     X_one, X_zero= separate_classes(X_train, y_train)
-    dim_test= X_test.shape[0]
     y_predict= []
-    for i in range(0, dim_test):
+    for i in range(0, X_test.shape[0]):
         current_X= np.array(X_test.iloc[i,:])
         likelihood_one= log_likelihood(current_X, X_one, bandwidth, kernel)
         likelihood_zero= log_likelihood(current_X, X_zero, bandwidth, kernel)
-        y_predict.append(classify(prior_one, prior_zero, likelihood_one, likelihood_zero))
-    y_predict= np.array(y_predict)
-    error= 1 - accuracy_score(y_test, y_predict)
-    #print("Misclassification error: %3.2f" % error)
-    return error, y_predict
-
+        classification = classify(prior_one, prior_zero, likelihood_one, likelihood_zero)
+        y_predict.append(classification)
+        
+    return np.array(y_predict)
 
 def bayes_cv(X_train, y_train, kfolds, cv_seed, bandwidth):
     """This function computes the cv error for Naive Bayes."""
     skf = StratifiedKFold(n_splits= kfolds, random_state= cv_seed, shuffle= True)
-    errors= []
-    for train, test in skf.split(X_train, y_train.values.ravel()):
-        err= prediction_error(X_train.iloc[train,:], y_train.iloc[train,:],
-                                 X_train.iloc[test,:], y_train.iloc[test,:],
-                                 bandwidth= bandwidth)
-        errors.append(err)
-    errors= np.array(errors)
-    return np.mean(errors), np.std(errors)
-
+    cv_evals= []
+    for train, valid in skf.split(X_train, y_train.values.ravel()):
+        y_predict= bayes_predict(X_train.iloc[train,:], 
+                           y_train.iloc[train,:],
+                           X_train.iloc[valid,:],
+                           bandwidth= bandwidth)
+        cv_eval = accuracy_score(y_train.iloc[valid,:], y_predict)
+        cv_evals.append(cv_eval)
+    
+    return np.array(cv_evals)
 
 def bayes_tuning(X_train, y_train, kfolds, cv_seed, bandwidth_max):
     """This function is to tune the bandwidth parameter for Naive Bayes
     Classifier"""
-    cv_errors= []
-    bandwidth = np.arange(0.01, bandwidth_max, 0.02)
-    for i in bandwidth:
-        print("Current Bandwidth %3.2f" % i)
-        err= bayes_cv(X_train, y_train, kfolds, cv_seed, i)
-        cv_errors.append(err)
-    cv_errors= np.array(cv_errors)
+    cv_data= []
+    bandwidths= np.arange(0.01, bandwidth_max, 0.02)
+    for bandwidth in bandwidths:
+        print("Current Bandwidth %3.2f" % bandwidth)
+        cv_eval= bayes_cv(X_train, y_train, kfolds, cv_seed, bandwidth)
+        #cv_data.append([k_neigh, np.mean(cv_eval), bayes.score(X_train, y_train)])
+        cv_data.append([bandwidth, 1-np.mean(cv_eval)])
    
-    bayes_plotting(bandwidth, cv_errors)
+    cv_data= pd.DataFrame(cv_data)
+    cv_data.columns= ["bandwidth", "CvError"]
     
-    return cv_errors
+    minIdx= cv_data['CvError'].idxmin()
+    optimal_bandwidth= cv_data['bandwidth'].iloc[minIdx]
+    min_cv_error= cv_data['CvError'].iloc[minIdx]
+    bayes_plotting(optimal_bandwidth, min_cv_error, 
+                   cv_data[["bandwidth"]],
+                   cv_data[["CvError"]])
+    
+    return optimal_bandwidth, cv_data
 
-def bayes_plotting(bandwidth, cv_error):
-    plt.plot(bandwidth, cv_error[:,0], label= "CV Error")
+def bayes_plotting(optimal_bandwidth, min_cv_error, bandwidths, cv_error):
+    fig = plt.figure()
+    ax = fig.add_subplot(111)
+    plt.plot(bandwidths, cv_error, label= "CV Error")
+    #plt.plot(x, 1 - y_train, label= "Train Error")
     plt.xlabel("Bandwidth")
     plt.ylabel("Error")
     plt.title("Nonparamentric Naive Bayes")
     plt.legend()
+    plt.plot([optimal_bandwidth], [min_cv_error], marker='o', markersize=3, color="red")
+    ax.annotate('(%d, %0.3f)' % (optimal_bandwidth, min_cv_error),
+                xy= (optimal_bandwidth, min_cv_error), 
+                xytext= (optimal_bandwidth, min_cv_error-0.0008))
+    plt.savefig('Best Bandwidth - Naive Bayes')
     plt.show()
     plt.close()
 
-def bayes_testing(X_train, y_train, X_test, y_test, cv_bayes, kernel= 'gaussian'):
+def bayes_testing(X_train, y_train, X_test, y_test, bandwidth, kernel= 'gaussian'):
     """This function returns the prediction for the testing set"""
-    bandwidth= cv_bayes[:,0].min()
-    test_error, y_predicted= prediction_error(X_train, y_train, X_test, y_test, bandwidth)
-    print("The testing error is: %3.2f" % test_error)
-    bayes_confusion_matrix= confusion_matrix(y_test, y_predicted)
-    return test_error, bayes_confusion_matrix
+    print("bandwidth", bandwidth)
+    y_predict= bayes_predict(X_train, y_train, X_test, bandwidth=bandwidth)
+    bayes_confusion_matrix= confusion_matrix(y_test, y_predict)
+    tn, fp, fn, tp = bayes_confusion_matrix.ravel()
+    print("Naive Bayes Testing:\n"
+          "\tTrue Negative: %d\n"
+          "\tFalse Positive: %d\n"
+          "\tFalse Negative: %d\n"
+          "\tTrue Positive: %d\n"
+          "\tTest Error: %3.4f" % (tn, fp, fn, tp, 1-accuracy_score(y_test, y_predict)))
+    
+    return bayes_confusion_matrix 
 
 def mc_nemar_test(e01, e10):
     return pow((abs(e01 - e10) - 1), 2) / (e01 + e10)
@@ -418,19 +442,34 @@ def main():
     knn_confusion_matrix= knn_testing(X_test, y_test, knn)
 
     # Naive Bayes Classifier
-    cv_bayes= bayes_tuning(X_train, y_train, kfolds, cv_seed, bandwidth_max)
-    bayes_error, bayes_confusion_matrix= bayes_testing(X_train, y_train, X_test, y_test, cv_bayes)
+    optimal_bandwidth, cv_bayes= bayes_tuning(X_train, y_train, kfolds, cv_seed, bandwidth_max)
+    bayes_error, bayes_confusion_matrix= bayes_testing(X_train, y_train, X_test, y_test, optimal_bandwidth)
     
     # Compare classifiers with Mc Nemar's test
     lr_vs_knn = compare_classifiers(logistic_regression.predict(X_test), 
-                                    knn.predict(X_test), y_test)
+                                    knn.predict(X_test), 
+                                    y_test)
     
-#    knn_vs_bayes = compare_classifiers(knn, ????)
+    lr_vs_bayes = compare_classifiers(logistic_regression.predict(X_test), 
+                                   bayes_predict(X_train, y_train, X_test, bandwidth= optimal_bandwidth), 
+                                   y_test)
+    
+    knn_vs_bayes = compare_classifiers(knn.predict(X_test), 
+                                       bayes_predict(X_train, y_train, X_test, bandwidth= optimal_bandwidth), 
+                                       y_test)
     
     print("\nMcNemar tests:")
-    print("\tLogistic Regression VS K-nearest neighbours: %0.3f" % lr_vs_knn)
-   # print("\tLogistic Regression VS Naive Bayes: %0.3f\n" % mc_nemar_test(0, 0))
-   # print("\tK-nearest neighbours VS Naive Bayes: %0.3f\n" % mc_nemar_test(0, 0))
+    print("\tLogistic Regression VS K-nearest neighbours: %0.3f\n" % lr_vs_knn)
+    print("\tLogistic Regression VS Naive Bayes: %0.3f\n" % lr_vs_bayes)
+    print("\tK-nearest neighbours VS Naive Bayes: %0.3f\n" % knn_vs_bayes)
 
     
 main()
+
+
+#class NaiveBayes:
+   # score: accuracy_score(y_train.iloc[valid,:], y_predict)
+ #    knn.predict(X_test)
+  #  knn.fit(X_train, y_train.values.ravel())
+   #  def predict(self):
+    #    return 'hello world'
