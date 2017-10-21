@@ -439,11 +439,11 @@ def main():
                                     y_test)
     
     lr_vs_bayes = compare_classifiers(logistic_regression.predict(X_test), 
-                                   bayes_predict(X_train, y_train, X_test, bandwidth= optimal_bandwidth), 
+                                   bayes_predict('gaussian', optimal_bandwidth, X_train, y_train, X_test), 
                                    y_test)
     
     knn_vs_bayes = compare_classifiers(knn.predict(X_test), 
-                                       bayes_predict(X_train, y_train, X_test, bandwidth= optimal_bandwidth), 
+                                       bayes_predict('gaussian', optimal_bandwidth, X_train, y_train, X_test), 
                                        y_test)
     
     print("\nMcNemar tests:")
