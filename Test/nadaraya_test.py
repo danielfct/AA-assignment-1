@@ -9,7 +9,16 @@ import numpy as np
 import matplotlib.pyplot as plt
 
 def f(x):
-    return 2*np.cos(x/2) + x**2/5 + 3
+    y= np.zeros(*x.shape)
+    for i in range(len(x)):
+        random_value= np.random.random()
+        if random_value < 0.3:
+            y[i]= 1
+        if (random_value > 0.3) and (random_value < 0.6):
+            y[i]= 0
+        else:
+            y[i]= 1
+    return y
 
 def gaussiank(u):
     k=np.e**(-0.5*u**2)/np.sqrt(2*np.pi)
@@ -34,7 +43,7 @@ def nad_wat_predict(K, h, X_train, Y_train, X_test):
     
     
 xs= np.random.rand(200) * 10
-ys= f(xs) + 2*np.random.randn(*xs.shape)
+ys= f(xs)
 grid= np.r_[0:10:512j]
 
 #new_grid= np.zeros(*grid.shape)
@@ -49,9 +58,9 @@ grid= np.r_[0:10:512j]
 #for i in range(len(grid)):
 #    second_grid[i]= nad_wat(gaussiank, 0.01, xs, ys, grid[i])
 
-plt.plot(grid, f(grid), 'r--', label= 'Reference')
+#plt.plot(grid, f(grid), 'r--', label= 'Reference')
 plt.plot(xs, ys, 'o', alpha= 0.5, label= 'Data')
-plt.plot(grid, nad_wat_predict(gaussiank, 0.5, xs, ys, grid), 'g', label= 'Fitted with 0.5')
-plt.plot(grid, nad_wat_predict(gaussiank, 1, xs, ys, grid), 'b', label = 'Fitted with 1')
-plt.plot(grid, nad_wat_predict(gaussiank, 0.01, xs, ys, grid), 'y', label= 'Fitted with 0.01')
+plt.plot(grid, 1 - nad_wat_predict(gaussiank, 0.5, xs, ys, grid), 'g', label= 'Fitted with 0.5')
+plt.plot(grid, 1 - nad_wat_predict(gaussiank, 1, xs, ys, grid), 'b', label = 'Fitted with 1')
+plt.plot(grid, 1 - nad_wat_predict(gaussiank, 0.03, xs, ys, grid), 'y', label= 'Fitted with 0.01')
 plt.legend(loc= 'best')
