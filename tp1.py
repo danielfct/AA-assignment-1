@@ -327,6 +327,7 @@ def bayes_classify(K, h, X_train, Y_train, X_test):
 
 def bayes_cv_with_bandwidth(K, h, X_train, y_train, kfolds, cv_seed):
     """This function computes the cv error for Naive Bayes."""
+    print("\n\nTraining BAYES")
     skf = StratifiedKFold(n_splits= kfolds, random_state= cv_seed, shuffle= True)
     errors= []
     for train, test in skf.split(X_train, y_train.values.ravel()):
@@ -338,7 +339,7 @@ def bayes_cv_with_bandwidth(K, h, X_train, y_train, kfolds, cv_seed):
 
         errors.append(1 - accuracy_score(y_testcv, y_predictedcv))
         #test
-        print(accuracy_score(y_testcv, y_predictedcv))
+        #print(accuracy_score(y_testcv, y_predictedcv))
     return np.mean(errors), np.std(errors)
     
 def bayes_cv(K, max_h, X_train, y_train, kfolds, cv_seed):
@@ -351,12 +352,21 @@ def bayes_cv(K, max_h, X_train, y_train, kfolds, cv_seed):
 
 def bayes_tuning(cv_error):
     index_best= cv_error[:,1].argmin()
+    optimal_bandwidth= cv_error[index_best, 0]
+    min_cv_error= cv_error[index_best, 1]
+    bandwidths= cv_error[:,0]
+    cv_errors= cv_error[:,1]
+    bayes_plotting(optimal_bandwidth, min_cv_error, bandwidths, cv_errors)
     return cv_error[index_best, 0]
 
 def bayes_test(K, h, X_train, Y_train, X_test, Y_test):
     Y_predict= bayes_classify(K, h, X_train, Y_train.values.ravel(), X_test)
     bayes_confusion_matrix= confusion_matrix(Y_test, Y_predict)
     return bayes_confusion_matrix
+
+def bayes_predict(K, h, X_train, Y_train, X_test):
+    Y_predict= bayes_classify(K, h, X_train, Y_train.values.ravel(), X_test)
+    return Y_predict
 
 def bayes_plotting(optimal_bandwidth, min_cv_error, bandwidths, cv_error):
     fig = plt.figure()
@@ -419,8 +429,9 @@ def main():
     knn_confusion_matrix= knn_testing(X_test, y_test, knn)
 
     # Naive Bayes Classifier
-    optimal_bandwidth, cv_bayes= bayes_tuning(X_train, y_train, kfolds, cv_seed, bandwidth_max)
-    bayes_error, bayes_confusion_matrix= bayes_testing(X_train, y_train, X_test, y_test, optimal_bandwidth)
+    cv_bayes= bayes_cv('gaussian', 1, X_train, y_train, 5, cv_seed)
+    optimal_bandwidth= bayes_tuning(bayes_cv)
+    bayes__confusion_matrix= bayes_test('gaussian', optimal_bandwidth, X_train, y_train, X_test, y_test)
     
     # Compare classifiers with Mc Nemar's test
     lr_vs_knn = compare_classifiers(logistic_regression.predict(X_test), 
