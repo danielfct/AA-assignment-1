@@ -430,7 +430,7 @@ def main():
 
     # Naive Bayes Classifier
     cv_bayes= bayes_cv('gaussian', 1, X_train, y_train, 5, cv_seed)
-    optimal_bandwidth= bayes_tuning(bayes_cv)
+    optimal_bandwidth= bayes_tuning(cv_bayes)
     bayes__confusion_matrix= bayes_test('gaussian', optimal_bandwidth, X_train, y_train, X_test, y_test)
     
     # Compare classifiers with Mc Nemar's test
