@@ -1,8 +1,16 @@
 \BOOKMARK [1][-]{section.1}{Introduction}{}% 1
 \BOOKMARK [1][-]{section.2}{Classifiers}{}% 2
 \BOOKMARK [2][-]{subsection.2.1}{Logistic Regression}{section.2}% 3
-\BOOKMARK [2][-]{subsection.2.2}{k-Nearest Neighbours}{section.2}% 4
-\BOOKMARK [2][-]{subsection.2.3}{Kernel Naive Bayes Classifier}{section.2}% 5
-\BOOKMARK [1][-]{section.3}{Comparation}{}% 6
-\BOOKMARK [1][-]{section.4}{Conclusion}{}% 7
-\BOOKMARK [1][-]{section.5}{Bibliography}{}% 8
+\BOOKMARK [3][-]{subsubsection.2.1.1}{Optimal C}{subsection.2.1}% 4
+\BOOKMARK [2][-]{subsection.2.2}{k-Nearest Neighbours}{section.2}% 5
+\BOOKMARK [3][-]{subsubsection.2.2.1}{Optimal K}{subsection.2.2}% 6
+\BOOKMARK [2][-]{subsection.2.3}{Kernel Naive Bayes Classifier}{section.2}% 7
+\BOOKMARK [3][-]{subsubsection.2.3.1}{Optimal Bandwidth found}{subsection.2.3}% 8
+\BOOKMARK [1][-]{section.3}{Comparing Classifiers}{}% 9
+\BOOKMARK [2][-]{subsection.3.1}{True Error}{section.3}% 10
+\BOOKMARK [3][-]{subsubsection.3.1.1}{Logisitic Regression}{subsection.3.1}% 11
+\BOOKMARK [3][-]{subsubsection.3.1.2}{K-nearest Neighbours}{subsection.3.1}% 12
+\BOOKMARK [3][-]{subsubsection.3.1.3}{Naive Bayes}{subsection.3.1}% 13
+\BOOKMARK [2][-]{subsection.3.2}{McNemar's test \(with continuity correction\)}{section.3}% 14
+\BOOKMARK [1][-]{section.4}{Discussion and Conclusion}{}% 15
+\BOOKMARK [1][-]{section.5}{Bibliography}{}% 16

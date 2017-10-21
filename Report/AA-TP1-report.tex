@@ -34,7 +34,7 @@
 {0pt}{3.25ex plus 1ex minus .2ex}{1.5ex plus .2ex}
 
 
-\title{\textbf{Aprendizagem Autom·tica} \\
+\title{\textbf{Aprendizagem Autom√°tica} \\
 \large Assignment 1 - Classifiers}
 
 \author{Andrea Mascaretti N52222\and Daniel Pimenta N45404}
@@ -161,12 +161,16 @@ was used.
 
 \subsubsection{Optimal C}
 
+
 Optimal C value found: 256\\
 At Cross Validation error value: 0.011\\
-
-// TODO\\
-explain what is the c value and the effect on its classifier and how we got the optimal value
-Explain the method by which the optimal values were found, noting the differences between the errors
+To tune the parameter, we relied on a stratified 5-fold cross-validation
+on the training set, picking the value that yielded the lowest value.
+From a numerical point of view, the trust region Newton method built
+in the $\mathsf{ScikitLearn}$ class for $\mathsf{L2}$-logistic regression
+was used.
+The C parameter acts as a regularising term: the bigger it is, the lesser the regularising impact on the coefficients.
+From a bias-variance trade-off point of view, a bigger C term increases the variance and reduces the bias.
 
 \includegraphics{"Best C value - L2 Logistic Regression".png}
 
@@ -208,9 +212,13 @@ set.
 Optimal K value found: 5\\
 At Cross Validation error value: 0.002\\
 
-// TODO\\
-explain what is the k value and the effect on its classifier and how we got the optimal value
-Explain the method by which the optimal values were found, noting the differences between the errors
+Comparing the posterior probabilities, we classified each data picking
+the maximum \textit{a posteriori}. We consider the usual Euclidean
+distance for our distance function and trained only for odds value
+of $k$ (between $1$ and $39$), picking the one that yielded the
+best result on a Stratified $5$-fold cross validation on our data
+set.
+We only picked odd numbers to avoid having ties. Alternatively, a rule for breaking ties could have been implemented.
 
 \includegraphics{"Best K value - K-nearest Neighbours".png}
 
@@ -275,12 +283,12 @@ was implemented.
 
 \subsubsection{Optimal Bandwidth found}
 
+
 Optimal Bandwidth found: 0.05\\
 At Cross Validation error value: 0.00\\
 
-// TODO\\
-explain what is the bandwidth and the effect on its classifier and how we got the optimal value
-Explain the method by which the optimal values were found, noting the differences between the errors
+To set the parameter $h$, once again a $5$-fold stratified cross validation was implemented.
+Notice that in this case, allowing for smaller values of $h$ implies reducing the bias and therefore increasing the variance.
 
 \includegraphics{"Best Bandwidth - Naive Bayes".png}
 
