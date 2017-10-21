@@ -17,6 +17,21 @@
 \usepackage{amssymb}
 \usepackage{amsmath}
 \usepackage{mathtools}
+\usepackage[linesnumbered,ruled,vlined]{algorithm2e} 
+\usepackage{titlesec}
+
+\DeclareRobustCommand{\rchi}{{\mathpalette\irchi\relax}}
+\newcommand{\irchi}[2]{\raisebox{\depth}{$#1\chi$}} 
+
+\setcounter{secnumdepth}{4}
+
+\titleformat{\paragraph}
+{\normalfont\normalsize\bfseries}{\theparagraph}{1em}{}
+\titlespacing*{\paragraph}
+{0pt}{3.25ex plus 1ex minus .2ex}{1.5ex plus .2ex}
+
+
+\newcommand\tab[1][1cm]{\hspace*{#1}}
 
 \title{\textbf{Aprendizagem Automática} \\
 \large Assignment 1 - Classifiers}
@@ -206,17 +221,95 @@ the differences between the errors and the importance of leaving out
 a test set for the final evaluation\\
 The report should show the error plots but no other plots are necessary\\
 
-\section{Comparation}
+\section{Comparing Classifiers}
 
-\large McNemar's test
-TALK ABOUT WHAT IS MCNEMAR TEST AND HOW IT WAS IMPLEMENTED AND USED\\
-Estimate the true error for each classifier, compare the classifiers with McNemar's test and discuss which, if any, is better for this application\\
+After parameterizing and fitting our train data into our classifiers we used our test data to calculate the true error of all
+three classifiers.
+
+\subsection{True Error}
+
+\subsubsection{Logisitic Regression}
+	\tab True Negative: 253\\
+        	\tab False Positive: 1\\
+        	\tab False Negative: 2\\
+        	\tab True Positive: 201\\
+        	\tab Test Error: 0.0066
+
+\subsubsection{K-nearest Neighbours}
+	\tab True Negative: 254\\
+        	\tab False Positive: 0\\
+        	\tab False Negative: 0\\
+        	\tab True Positive: 203\\
+        	\tab Test Error: 0.0000
+
+\subsubsection{Naive Bayes}
+	\tab True Negative: 240\\
+        	\tab False Positive: 14\\
+        	\tab False Negative: 73\\
+        	\tab True Positive: 130\\
+        	\tab Test Error: 0.1904
+
+\bigbreak
+For comparing the three classifiers performances, we used McNemar's test with a 95\% confidence interval.
+
+\subsection{McNemar's test}
+Let e01 be the number of examples the first classifier
+misclassifies but the second classifies correctly, and e10 be the number of examples the second classifier
+classifies incorrectly but the first classifier classifies correctly. The difference divided by the total
+follows approximately a chi-squared distribution with one degree of freedom:
+
+\begin{equation}
+\frac{(|e_{01} - e_{10}| - 1)^2}{e_{01}+e_{10}}\approx\rchi^2_{1}
+\end{equation}
+
+From the predicted classification values of two classifiers we were able to calculate the e01 and e10 values by 
+doing a simple loop and comparing both classifications with the real classification value:\\
+
+\begin{algorithm}[H]
+ 	\KwData{first predictions, second predictions, real values}
+ 	\KwResult{McNemar's test}
+	initialize e01 and e10\;
+ 	\For{every value in real values}{
+		get current value of first predictions\;
+		get current value of second predictions\;
+  		\If{\(\lvert currentFirstPrediction - value \rvert\) equals 1 and second prediction - value equals 0}{
+			increment e01\;
+   		}
+   		\If{first prediction - value equals 0 and \(\lvert currentSecondPrediction - value \rvert\) equals 1}{
+			increment e10\;
+   		}
+  	}
+	\Return $\frac{(|e_{01} - e_{10}| - 1)^2}{e_{01}+e_{10}}$
+	\caption{McNemar's test}
+\end{algorithm}
+\bigbreak
+
+After running the McNemar's test to compare all three classifiers we got this result:\\
+\begin{center}
+Logistic Regression VS K-nearest neighbours: 1.333\\
+Logistic Regression VS Naive Bayes: 78.284\\
+K-nearest neighbours VS Naive Bayes: 85.011
+\end{center}
+
+Which indicates that Logistic Regression and K-nearest neighbours classifiers have similar performance.
+
+  TODO compare naive bayes 
 
 
 \section{Discussion and Conclusion}
-This assignment aimed to help us understand the fundamental principles of three classifiers: Logistic Regression, K-nearest Neighbours and Naive Bayes. It also allowed us to understand and apply some data management techniques such as preprocessing data (Load, Shuffle, Split) and the process of Cross Validation. 
-The first step on this assignment was to load and preprocessing the data from a file which held data from the UCI machine learning repository about bank notes authenticity. The goal of the three classifiers was to predict either a bank note was real of fake based on four features (Variance, Skewness, Curtosis, Entropy).
-A test of performance of those classifiers was done to compare and eventually choose the best and to discuss if any is significantly better than the others. From the McNemar's tests we noticed that Logistic Regression and K-nearest Neighbours classifiers performances were similar. But in this particular case, Naive Bayes performance was way worse than the other two classifiers.
+This assignment aimed to help us understand the fundamental principles of three 
+classifiers: Logistic Regression, K-nearest Neighbours and Naive Bayes. 
+It also allowed us to understand and apply some data management techniques 
+such as preprocessing data (Load, Shuffle, Split) and the process of Cross Validation. 
+The first step on this assignment was to load and preprocessing the data from a 
+file which held data from the UCI machine learning repository about bank notes 
+authenticity. The goal of the three classifiers was to predict either a bank note 
+was real of fake based on four features (Variance, Skewness, Curtosis, Entropy).
+A test of performance of those classifiers was done to compare and eventually 
+choose the best and to discuss if any is significantly better than the others. 
+From the McNemar's tests we noticed that Logistic Regression and K-nearest 
+Neighbours classifiers performances were similar. But in this particular case, 
+Naive Bayes performance was way worse than the other two classifiers.
   
 
 \section{Bibliography}
