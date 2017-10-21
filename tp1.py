@@ -378,26 +378,22 @@ def bayes_testing(X_train, y_train, X_test, y_test, cv_bayes, kernel= 'gaussian'
     return test_error, bayes_confusion_matrix
 
 def mc_nemar_test(e01, e10):
-    return pow((np.abs(e01 - e10) - 1), 2) / (e01 + e10)
+    return pow((abs(e01 - e10) - 1), 2) / (e01 + e10)
 
-def compare_classifiers(logistic_regression_confusion_matrix,
-                        knn_confusion_matrix,
-                        bayes_confusion_matrix):
-    # Logistic Regression results
-    lr_tn, lr_fp, lr_fn, lr_tp = logistic_regression_confusion_matrix.ravel()
-    # K-nearest Neighbours results
-    knn_tn, knn_fp, knn_fn, knn_tp = knn_confusion_matrix.ravel()
-    # Naive Bayes results
-    nb_tn, nb_fp, nb_fn, nb_tp = bayes_confusion_matrix.ravel()
-    # Compare classifiers
-    print("\nMcNemar tests:")
-    print("\tLogistic Regression VS K-nearest neighbours: %0.3f" % (mc_nemar_test(0, 0)))
-    print("\tLogistic Regression VS Naive Bayes: %0.3f\n" % mc_nemar_test(0, 0))
-    print("\tK-nearest neighbours VS Logistic Regression: %0.3f" % (mc_nemar_test(0, 0)))
-    print("\tK-nearest neighbours VS Naive Bayes: %0.3f\n" % mc_nemar_test(0, 0))
-    print("\tNaive Bayes VS Logistic Regression: %0.3f\n" % mc_nemar_test(0, 0))
-    print("\tNaive Bayes VS K-nearest neighbours: %0.3f\n" % mc_nemar_test(0, 0))
-
+def compare_classifiers(first_clf_pred, second_clf_pred, y_test):
+    e01 = e10 = 0
+    for i in range (len(y_test)):
+        curr_first_pred = first_clf_pred[i]
+        curr_second_pred = second_clf_pred[i]
+        curr_correct_class = y_test['Class'].iloc[i]
+        
+        if (abs(curr_first_pred-curr_correct_class) == 1 and curr_second_pred-curr_correct_class == 0):
+            e01 += 1
+        if (curr_first_pred-curr_correct_class == 0 and abs(curr_second_pred-curr_correct_class) == 1):
+            e10 += 1
+   
+  #  print("\ne01:", e01, "e10:", e10)
+    return mc_nemar_test(e01, e10);
 
 def main():
     filename= 'TP1-data.csv'
@@ -426,8 +422,15 @@ def main():
     bayes_error, bayes_confusion_matrix= bayes_testing(X_train, y_train, X_test, y_test, cv_bayes)
     
     # Compare classifiers with Mc Nemar's test
-    compare_classifiers(logistic_regression_confusion_matrix,
-                        knn_confusion_matrix)
-                        bayes_confusion_matrix)
+    lr_vs_knn = compare_classifiers(logistic_regression.predict(X_test), 
+                                    knn.predict(X_test), y_test)
+    
+#    knn_vs_bayes = compare_classifiers(knn, ????)
+    
+    print("\nMcNemar tests:")
+    print("\tLogistic Regression VS K-nearest neighbours: %0.3f" % lr_vs_knn)
+   # print("\tLogistic Regression VS Naive Bayes: %0.3f\n" % mc_nemar_test(0, 0))
+   # print("\tK-nearest neighbours VS Naive Bayes: %0.3f\n" % mc_nemar_test(0, 0))
+
     
 main()
