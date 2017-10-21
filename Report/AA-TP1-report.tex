@@ -224,14 +224,52 @@ the conditional likelihood as
 \end{equation}
 This assumption, that is in fact \textit{naive}, does not usually
 hurt too much as we are interested in picking the maximum probability
-a\textit{ posteriori}. 
+a\textit{ posteriori}.
 
 Naive Bayes is usually implemented by considering a probability density
 function, that is fitted to the feature being taken into account.
-However, we decided to model the conditional distribution with a more
-complex kernel density estimation to allow for more parameter freedom.
-As far as the prior are concerned, we decided to consider the relative
-frequencies of the two classes.\\
+In this particular instance, however, the conditional likelihood was
+modelled applying kernel density estimation techniques.
+
+If we let $\Omega$ be a nonempty set, a symmetric function (\textit{i.e.}
+a function that attains the same value for any permutation of its
+arguments) $K:\,\Omega\times\Omega\rightarrow\mathbb{R}$ is called
+a positive definite kernel on $\Omega$ if 
+\begin{equation}
+\sum\sum c_{i}c_{j}K\left(x_{i},\,x_{j}\right)\geq0\label{eq:-15}
+\end{equation}
+for any $n\in\mathbb{N},\,x_{1},\,\ldots,\,x_{n}\in\Omega,\,c_{1},\,\ldots,\,c_{n}\in\mathbb{R}$.
+
+In this specific setting, we considered the RBF Kernel (also known
+as Gaussian kernel), of the form 
+\begin{equation}
+K_{h}\left(\mathbf{x},\mathbf{x}\right)=\exp\left\{ -\frac{\Vert\mathbf{x}-\mathbf{x^{\prime}}\Vert}{h}\right\} .\label{eq:-16}
+\end{equation}
+
+Once the kernel form is fixed, the density for a point $y$ can be
+computed by considering 
+\[
+\rho_{K}\left(y\right)=\sum K\left(\left(y-x_{i}\right)/h\right).
+\]
+
+Notice that the bandwidth here acts as a bias-variance trade-off parameter.
+
+To classify the data we considered the logarithm of the posterior
+probability, obtaining
+
+\begin{equation}
+\ln\left(\mathsf{p}\left(\mathcal{C}_{k}|\mathbf{x}\right)\right)\propto\ln\left(\mathsf{p}\left(\mathcal{C}_{k}\right)\right)+\sum\ln\left(\mathsf{p}\left(\mathbf{x}|\mathcal{C}_{k}\right)\right).\label{eq:-17}
+\end{equation}
+The prior was fixed simply by taking into accounting the elements
+per class and the likelihood by means of the $\mathsf{KernelDensity}$
+function in the $\mathsf{ScikitLearn}$ library.
+
+To classify our data into the two categories, we considered 
+\begin{equation}
+\arg\underset{k\in\left\{ 0,1\right\} }{\max}\ln\left(\mathsf{p}\left(\mathcal{C}_{k}\right)\right)+\sum\ln\left(\mathsf{p}\left(\mathbf{x}|\mathcal{C}_{k}\right)\right).\label{eq:-18}
+\end{equation}
+To set the parameter $h$, once again a 5-fold stratified cross validation
+was implemented.
 
 \subsubsection{Optimal Bandwidth found}
 
