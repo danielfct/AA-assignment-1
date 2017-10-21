@@ -55,19 +55,29 @@ fit our data on Logistic Regression and K-nearest Neighbours classifiers. Anothe
  which provides a MATLAB-like plotting framework used to build the error plots. 
 \end{abstract}
 
+% Introduction
 \section{Introduction}
 Using the Spyder IDE and programming language Python 3.6 and with a csv file which held data about bank notes authenticity 
 we were asked to parameterize, fit and compare three different classifiers: Logistic Regression, K-nearest Neighbours and Naive Bayes. 
 For the first two classifiers, we were allowed to import them from a module which was provided by scikit-learn. 
 The Naive Bayes classifier was fully implemented for our assignment to fit our data using the best bandwidth we could find and to then later predict the real values
 for a test set.\\
-The initial data was split into a training set and a test set. The training set was then folded into 5 folds to be used by Cross Validation.
+The initial data was split into a training set and a test set using a random seed value of 10182017. 
+The training set was then folded into 5 folds to be used by Cross Validation.
 For the Logistic Regression classifier we started with a C value of 1 and incremented to its double for 20 iterations.
 For the K value of the K-Nearest Neighbours classifier, we tested k values from 1 to 39 using odd values only. 
 In the end, we hope to compare our three classifiers performance using McNemar's test with 95\%  confidence interval 
 by comparing their predictions with the real values and pick the best classifier approached in this assignment.\\
-Before proceeding with the analysis, we standardised our data. To do so, we centred with respect to the mean and normalised taking into account the standard deviation. It is important to notice that we considered the mean and the standard deviation computed from the training set. Those same transformations were applied afterwards to the test set in order to obtain an estimate of the accuracy of our classifiers. To get an idea of the distribution of our data, we also decided to visualise them by means of a series of scatterplots and density graphs. \includegraphics{"Visual Exploratory Analysis".png}
+Before proceeding with the analysis, we standardised our data. To do so, we centred with respect to the mean and normalised 
+taking into account the standard deviation. It is important to notice that we considered the mean and the standard deviation computed
+ from the training set. Those same transformations were applied afterwards to the test set in order to obtain an estimate of the accuracy 
+of our classifiers. To get an idea of the distribution of our data, we also decided to visualise them by means of a series of scatterplots and density graphs. 
 
+\begin{center}
+\includegraphics[scale=0.75]{"Visual Exploratory Analysis".png}
+\end{center}
+
+% Classifiers
 \section{Classifiers}
 
 \subsection{Logistic Regression}
@@ -172,7 +182,6 @@ was used.
 The C parameter acts as a regularising term: the bigger it is, the lesser the regularising impact on the coefficients.
 From a bias-variance trade-off point of view, a bigger C term increases the variance and reduces the bias.
  
-
 \includegraphics{"Best C value - L2 Logistic Regression".png}
 
 \subsection{k-Nearest Neighbours}
@@ -290,6 +299,7 @@ After parameterizing and fitting our train data into our classifiers we used our
 three classifiers.
 It was important to split our initial data into training and testing data so we could have an unbiased set to now test our predictions.
 
+% Testing
 \subsection{True Error}
 
 The following results were obtained with a random split seed value of 10182017 and a cross validation random seed value of 52222.
@@ -362,6 +372,7 @@ also that Logistic Regression and Naive Bayes have a similar performance.
 The comparison of K-nearest neighbours and Naive Bayes was not possible with McNemar's test because
 they both achieved a 0\% test error. But that could indicate both classifiers have similar performance.
 
+% Conclusion
 \section{Discussion and Conclusion}
 This assignment aimed to help us understand the fundamental principles of three 
 classifiers: Logistic Regression, K-nearest Neighbours and Naive Bayes. 
@@ -382,8 +393,8 @@ but then again, not enough to differentiate the two.
 For the test set we had, the McNemar's test with K-nearest neighbours and Naive Bayes was
 not possible because both classifiers had a success rate of 100\% when predicting the classifications. 
   
+% Bibliography
 \clearpage
-
 \section{Bibliography}
 \begin{itemize}
 \item \href{http://aa.ssdi.di.fct.unl.pt/files/AA-05.pdf}{Lecture 5}, 
