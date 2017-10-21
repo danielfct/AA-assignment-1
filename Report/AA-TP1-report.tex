@@ -27,9 +27,17 @@
 \maketitle
 
 \begin{abstract}
-The main goal of this assignment was the parameterization, fitting and comparation of Logistic Regression, K-nearest Neighbours and Naive Bayes classifiers.\\ 
-The data set used was the banknote authentication which was obtained from the \hyperref['https://archive.ics.uci.edu/ml/datasets/banknote+authentication]{UCI machine learning repository}.\\
-To achieve our goals we used the Spyder IDE with programming language Python 3.6 and some of its modules such as \textit{Panda} to load and manage our data, \textit{NumPy} which is the fundamental package for scientific computing with Python and was used for various mathematical calculations and managing multidimensional arrays, \textit{sklearn (scikit-learn)} which has efficient tools for data mining and data analysis used in our assignment to preprocess data (shuffle, standardize, split), fold our data into k stratified folds, calculate cross validation score and fit our data on Logistic Regression and K-nearest Neighbours classifiers. Another imported module was Matplotlib.Pyplot which provides a MATLAB-like plotting framework used to build the error plots. 
+The main goal of this assignment was the parameterization, fitting and comparation of Logistic Regression,
+ K-nearest Neighbours and Naive Bayes classifiers.\\ 
+The data set used was the banknote authentication which was obtained from the
+ \href{https://archive.ics.uci.edu/ml/datasets/banknote+authentication}{UCI machine learning repository}.\\
+To achieve our goals we used the Spyder IDE with programming language Python 3.6 and some of its modules 
+such as \textit{Panda} to load and manage our data, \textit{NumPy} which is the fundamental package for 
+scientific computing with Python and was used for various mathematical calculations and managing multidimensional 
+arrays, \textit{sklearn (scikit-learn)} which has efficient tools for data mining and data analysis used in our assignment 
+to preprocess data (shuffle, standardize, split), fold our data into k stratified folds, calculate cross validation score and 
+fit our data on Logistic Regression and K-nearest Neighbours classifiers. Another imported module was Matplotlib.Pyplot
+ which provides a MATLAB-like plotting framework used to build the error plots. 
 \end{abstract}
 
 \section{Introduction}
@@ -129,6 +137,8 @@ From a numerical point of view, the trust region Newton method built
 in the $\mathsf{ScikitLearn}$ class for $\mathsf{L2}$-logistic regression
 was used.
 
+\includegraphics{Best C value - L2 Logistic Regression.png}
+
 \subsection{k-Nearest Neighbours}
 
 Suppose that we have some classes $\mathcal{C}_{k}$ such that each
@@ -162,6 +172,8 @@ of $k$ (between $1$ and $39$), picking the one that yielded the
 best result on a Stratified $5$-fold cross validation on our data
 set.
 
+\includegraphics{Best K value - K-nearest Neighbours.png}
+
 \subsection{Kernel Naive Bayes Classifier}
 
 Let $\mathcal{C}_{k}$ be a class and let $\mathbf{x}$ our data vector.
@@ -182,7 +194,9 @@ function, that is fitted to the feature being taken into account.
 However, we decided to model the conditional distribution with a more
 complex kernel density estimation to allow for more parameter freedom.
 As far as the prior are concerned, we decided to consider the relative
-frequencies of the two classes.
+frequencies of the two classes.\\
+
+\includegraphics{Best Bandwidth - Naive Bayes.png}
 
 Explain what are the three parameters that were optimized and their
 effects on their respective classifiers. This will also require a
@@ -192,14 +206,6 @@ the differences between the errors and the importance of leaving out
 a test set for the final evaluation\\
 The report should show the error plots but no other plots are necessary\\
 
-{\large{}Logistic Regression}\\
-{\large \par}
-
-{\large{}K-nearest Neighbours }\\
-{\large \par}
-
-{\large{}Naive Bayes}\\
-{\large \par}
 \section{Comparation}
 
 \large McNemar's test
@@ -207,12 +213,24 @@ TALK ABOUT WHAT IS MCNEMAR TEST AND HOW IT WAS IMPLEMENTED AND USED\\
 Estimate the true error for each classifier, compare the classifiers with McNemar's test and discuss which, if any, is better for this application\\
 
 
-\section{Conclusion}
-WHAT WAS ACHIEVED AND WHAT WE LEARNT\\
+\section{Discussion and Conclusion}
+This assignment aimed to help us understand the fundamental principles of three classifiers: Logistic Regression, K-nearest Neighbours and Naive Bayes. It also allowed us to understand and apply some data management techniques such as preprocessing data (Load, Shuffle, Split) and the process of Cross Validation. 
+The first step on this assignment was to load and preprocessing the data from a file which held data from the UCI machine learning repository about bank notes authenticity. The goal of the three classifiers was to predict either a bank note was real of fake based on four features (Variance, Skewness, Curtosis, Entropy).
+A test of performance of those classifiers was done to compare and eventually choose the best and to discuss if any is significantly better than the others. From the McNemar's tests we noticed that Logistic Regression and K-nearest Neighbours classifiers performances were similar. But in this particular case, Naive Bayes performance was way worse than the other two classifiers.
+  
 
 \section{Bibliography}
 \begin{itemize}
-\item ...\\
+\item \href{http://aa.ssdi.di.fct.unl.pt/files/AA-05.pdf}{Lecture 5}, 
+	\href{http://aa.ssdi.di.fct.unl.pt/files/AA-05_notes.pdf}{Lecture 5 Notes}, 
+	\href{http://aa.ssdi.di.fct.unl.pt/files/AA-06.pdf}{Lecture 6}, 
+	\href{http://aa.ssdi.di.fct.unl.pt/files/AA-06_notes.pdf}{Lecture 6 Notes}, 
+	\href{http://aa.ssdi.di.fct.unl.pt/files/AA-07.pdf}{Lecture 7}, 
+	\href{http://aa.ssdi.di.fct.unl.pt/files/AA-07_notes.pdf}{Lecture 7 Notes}\\
+\item \href{http://aa.ssdi.di.fct.unl.pt/files/Tutorials.pdf}{Tutorial Notes}\\
+\item \href{http://scikit-learn.org/stable/modules/preprocessing.html#preprocessing}{Scikit-learn Preprocessing docs}\\
+\item \href{http://scikit-learn.org/stable/supervised_learning.html#supervised-learning}{Scikit-learn Supervised Learning docs}\\
+\item \href{http://scikit-learn.org/stable/model_selection.html#model-selection}{Scikit-learn Model Selection docs}\\
 \end{itemize}
 
 \end{document}
