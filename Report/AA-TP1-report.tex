@@ -13,25 +13,26 @@
 %% To use colors
 \usepackage[usenames,dvipsnames,svgnames,table]{xcolor}
 
-%%To use maths
+%% To use maths
 \usepackage{amssymb}
 \usepackage{amsmath}
 \usepackage{mathtools}
 \usepackage[linesnumbered,ruled,vlined]{algorithm2e} 
 \usepackage{titlesec}
 
+%% Command to type a chi character
 \DeclareRobustCommand{\rchi}{{\mathpalette\irchi\relax}}
 \newcommand{\irchi}[2]{\raisebox{\depth}{$#1\chi$}} 
+%% Command to simulate a tab character
+\newcommand\tab[1][1cm]{\hspace*{#1}}
 
+%% Set sub of subsections
 \setcounter{secnumdepth}{4}
-
 \titleformat{\paragraph}
 {\normalfont\normalsize\bfseries}{\theparagraph}{1em}{}
 \titlespacing*{\paragraph}
 {0pt}{3.25ex plus 1ex minus .2ex}{1.5ex plus .2ex}
 
-
-\newcommand\tab[1][1cm]{\hspace*{#1}}
 
 \title{\textbf{Aprendizagem Automática} \\
 \large Assignment 1 - Classifiers}
@@ -165,8 +166,9 @@ At Cross Validation error value: 0.011\\
 
 // TODO\\
 explain what is the c value and the effect on its classifier and how we got the optimal value
+Explain the method by which the optimal values were found, noting the differences between the errors
 
-\includegraphics{Best C value - L2 Logistic Regression.png}
+\includegraphics{"Best C value - L2 Logistic Regression".png}
 
 \subsection{k-Nearest Neighbours}
 
@@ -208,11 +210,11 @@ At Cross Validation error value: 0.002\\
 
 // TODO\\
 explain what is the k value and the effect on its classifier and how we got the optimal value
+Explain the method by which the optimal values were found, noting the differences between the errors
 
-\includegraphics{Best K value - K-nearest Neighbours.png}
+\includegraphics{"Best K value - K-nearest Neighbours".png}
 
 \subsection{Kernel Naive Bayes Classifier}
-
 Let $\mathcal{C}_{k}$ be a class and let $\mathbf{x}$ our data vector.
 As done before, we can apply Bayes' theorem to provide the \textit{a
 	posteriori} probability of belonging to such class by stating \ref{eq:-13}.
@@ -224,14 +226,52 @@ the conditional likelihood as
 \end{equation}
 This assumption, that is in fact \textit{naive}, does not usually
 hurt too much as we are interested in picking the maximum probability
-a\textit{ posteriori}. 
+a\textit{ posteriori}.
 
 Naive Bayes is usually implemented by considering a probability density
 function, that is fitted to the feature being taken into account.
-However, we decided to model the conditional distribution with a more
-complex kernel density estimation to allow for more parameter freedom.
-As far as the prior are concerned, we decided to consider the relative
-frequencies of the two classes.\\
+In this particular instance, however, the conditional likelihood was
+modelled applying kernel density estimation techniques.
+
+If we let $\Omega$ be a nonempty set, a symmetric function (\textit{i.e.}
+a function that attains the same value for any permutation of its
+arguments) $K:\,\Omega\times\Omega\rightarrow\mathbb{R}$ is called
+a positive definite kernel on $\Omega$ if 
+\begin{equation}
+\sum\sum c_{i}c_{j}K\left(x_{i},\,x_{j}\right)\geq0\label{eq:-15}
+\end{equation}
+for any $n\in\mathbb{N},\,x_{1},\,\ldots,\,x_{n}\in\Omega,\,c_{1},\,\ldots,\,c_{n}\in\mathbb{R}$.
+
+In this specific setting, we considered the RBF Kernel (also known
+as Gaussian kernel), of the form 
+\begin{equation}
+K_{h}\left(\mathbf{x},\mathbf{x}\right)=\exp\left\{ -\frac{\Vert\mathbf{x}-\mathbf{x^{\prime}}\Vert}{h}\right\} .\label{eq:-16}
+\end{equation}
+
+Once the kernel form is fixed, the density for a point $y$ can be
+computed by considering 
+\[
+\rho_{K}\left(y\right)=\sum K\left(\left(y-x_{i}\right)/h\right).
+\]
+
+Notice that the bandwidth here acts as a bias-variance trade-off parameter.
+
+To classify the data we considered the logarithm of the posterior
+probability, obtaining
+
+\begin{equation}
+\ln\left(\mathsf{p}\left(\mathcal{C}_{k}|\mathbf{x}\right)\right)\propto\ln\left(\mathsf{p}\left(\mathcal{C}_{k}\right)\right)+\sum\ln\left(\mathsf{p}\left(\mathbf{x}|\mathcal{C}_{k}\right)\right).\label{eq:-17}
+\end{equation}
+The prior was fixed simply by taking into accounting the elements
+per class and the likelihood by means of the $\mathsf{KernelDensity}$
+function in the $\mathsf{ScikitLearn}$ library.
+
+To classify our data into the two categories, we considered 
+\begin{equation}
+\arg\underset{k\in\left\{ 0,1\right\} }{\max}\ln\left(\mathsf{p}\left(\mathcal{C}_{k}\right)\right)+\sum\ln\left(\mathsf{p}\left(\mathbf{x}|\mathcal{C}_{k}\right)\right).\label{eq:-18}
+\end{equation}
+To set the parameter $h$, once again a 5-fold stratified cross validation
+was implemented.
 
 \subsubsection{Optimal Bandwidth found}
 
@@ -240,26 +280,16 @@ At Cross Validation error value: 0.00\\
 
 // TODO\\
 explain what is the bandwidth and the effect on its classifier and how we got the optimal value
+Explain the method by which the optimal values were found, noting the differences between the errors
 
-\includegraphics{Best Bandwidth - Naive Bayes.png}
-
-
-
-
-
-// TODO\\
-Explain the method by which the optimal values were found, noting
-the differences between the errors and the importance of leaving out
-a test set for the final evaluation\\
-
-
-
+\includegraphics{"Best Bandwidth - Naive Bayes".png}
 
 
 \section{Comparing Classifiers}
 
 After parameterizing and fitting our train data into our classifiers we used our test data to calculate the true error of all
 three classifiers.
+It was important to split our initial data into training and testing data so we could have an unbiased set to now test our predictions.
 
 \subsection{True Error}
 
@@ -278,12 +308,11 @@ three classifiers.
         	\tab Test Error: 0.0000
 
 \subsubsection{Naive Bayes}
-TODO
-	\tab True Negative: 240\\
-        	\tab False Positive: 14\\
-        	\tab False Negative: 73\\
-        	\tab True Positive: 130\\
-        	\tab Test Error: 0.1904
+        \tab True Negative: 254\\
+        \tab False Positive: 0\\
+        \tab False Negative: 0\\
+        \tab True Positive: 203\\
+        \tab Test Error: 0.0000
 
 \bigbreak
 For comparing the three classifiers performances, we used McNemar's test with a 95\% confidence interval.
@@ -325,13 +354,12 @@ After running the McNemar's test to compare all three classifiers we got this re
 Logistic Regression VS K-nearest neighbours: 1.333\\
 Logistic Regression VS Naive Bayes: 1.333\\
 K-nearest neighbours VS Naive Bayes: Not applicable
-TODO
 \end{center}
 
-Which indicates that Logistic Regression and K-nearest neighbours classifiers have similar performance. 
-Also Logistic Regression and Naive Bayes have a similar performance.
+Which indicates that Logistic Regression and K-nearest neighbours classifiers have similar performance and
+also that Logistic Regression and Naive Bayes have a similar performance.
 The comparation of K-nearest neighbours and Naive Bayes was not possible with McNemar's test because
-they both achieved a 0\% test error. But that should indicate both classifiers have similar performaces.
+they both achieved a 0\% test error. But that could indicate both classifiers have similar performance.
 
 \section{Discussion and Conclusion}
 This assignment aimed to help us understand the fundamental principles of three 

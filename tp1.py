@@ -325,14 +325,14 @@ def bayes_classify(K, h, X_train, Y_train, X_test):
         Y_predict[row]= bayes_classify_point(K, h, X_train, Y_train, X_test_classify)
     return Y_predict
 
-def bayes_cv_with_bandwidth(K, h, X_train, y_train, kfolds, cv_seed):
+def bayes_cv_with_bandwidth(K, h, X_train, Y_train, kfolds, cv_seed):
     """This function computes the cv error for Naive Bayes."""
     skf = StratifiedKFold(n_splits= kfolds, random_state= cv_seed, shuffle= True)
     errors= []
-    for train, test in skf.split(X_train, y_train.values.ravel()):
-        y_testcv= y_train.iloc[test,:]
+    for train, test in skf.split(X_train, Y_train.values.ravel()):
+        y_testcv= Y_train.iloc[test,:]
         X_testcv= X_train.iloc[test,:]
-        y_traincv= y_train.iloc[train,:]
+        y_traincv= Y_train.iloc[train,:]
         X_traincv= X_train.iloc[train,:]
         y_predictedcv= bayes_classify(K, h, X_traincv, y_traincv.values.ravel(), X_testcv)
 
@@ -341,11 +341,11 @@ def bayes_cv_with_bandwidth(K, h, X_train, y_train, kfolds, cv_seed):
         #print(accuracy_score(y_testcv, y_predictedcv))
     return np.mean(errors), np.std(errors)
     
-def bayes_cv(K, max_h, X_train, y_train, kfolds, cv_seed):
+def bayes_cv(K, max_h, X_train, Y_train, kfolds, cv_seed):
     cv_error= []
     for curr_bandwidth in np.arange(0.01, max_h, 0.02):
         print("Current Bandwidth %3.2f" % curr_bandwidth)
-        curr_err, curr_std= bayes_cv_with_bandwidth(K, curr_bandwidth, X_train, y_train, kfolds, cv_seed)
+        curr_err, curr_std= bayes_cv_with_bandwidth(K, curr_bandwidth, X_train, Y_train, kfolds, cv_seed)
         cv_error.append([curr_bandwidth, curr_err, curr_std])
     return np.array(cv_error)
 
@@ -358,9 +358,16 @@ def bayes_tuning(cv_error):
     bayes_plotting(optimal_bandwidth, min_cv_error, bandwidths, cv_errors)
     return cv_error[index_best, 0]
 
-def bayes_test(K, h, X_train, Y_train, X_test, Y_test):
+def bayes_testing(K, h, X_train, Y_train, X_test, Y_test):
     Y_predict= bayes_classify(K, h, X_train, Y_train.values.ravel(), X_test)
     bayes_confusion_matrix= confusion_matrix(Y_test, Y_predict)
+    tn, fp, fn, tp = bayes_confusion_matrix.ravel()
+    print("\nBayes Testing:\n"
+          "\tTrue Negative: %d\n"
+          "\tFalse Positive: %d\n"
+          "\tFalse Negative: %d\n"
+          "\tTrue Positive: %d\n"
+          "\tTest Error: %3.4f" % (tn, fp, fn, tp, 1-accuracy_score(Y_test, Y_predict)))
     return bayes_confusion_matrix
 
 def bayes_predict(K, h, X_train, Y_train, X_test):
@@ -402,7 +409,8 @@ def compare_classifiers(first_clf_pred, second_clf_pred, y_test):
         if (curr_first_pred-curr_correct_class == 0 and abs(curr_second_pred-curr_correct_class) == 1):
             e10 += 1
    
-    if (e10 + e10 == 0):
+    
+    if (e01 + e10 == 0):
         return None
     else:
         return mc_nemar_test(e01, e10);
@@ -433,7 +441,7 @@ def main():
     # Naive Bayes Classifier
     cv_bayes= bayes_cv(kernel, max_h, X_train, y_train, 5, cv_seed)
     optimal_bandwidth= bayes_tuning(cv_bayes)
-    bayes__confusion_matrix= bayes_test(kernel, optimal_bandwidth, X_train, y_train, X_test, y_test)
+    bayes__confusion_matrix= bayes_testing(kernel, optimal_bandwidth, X_train, y_train, X_test, y_test)
     
     # Compare classifiers with Mc Nemar's test
     lr_vs_knn = compare_classifiers(logistic_regression.predict(X_test), 
@@ -451,21 +459,18 @@ def main():
     print("\nMcNemar tests:")
     
     print("\tLogistic Regression VS K-nearest neighbours:\n")
-    print(lr_vs_knn)
     if (lr_vs_knn == None):
         print("\tNot applicable")
     else:
         print("%0.3f\n" % lr_vs_knn)
         
     print("\tLogistic Regression VS Naive Bayes:")
-    print(lr_vs_bayes)
     if (lr_vs_bayes == None):
         print("\tNot applicable\n")
     else:
         print("%0.3f\n" % lr_vs_bayes)
         
     print("\tK-nearest neighbours VS Naive Bayes:")
-    print(knn_vs_bayes)
     if (knn_vs_bayes == None):
         print("\tNot applicable")
     else:
