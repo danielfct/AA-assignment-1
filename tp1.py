@@ -379,7 +379,7 @@ def bayes_plotting(optimal_bandwidth, min_cv_error, bandwidths, cv_error):
     plt.title("Nonparamentric Naive Bayes")
     plt.legend()
     plt.plot([optimal_bandwidth], [min_cv_error], marker='o', markersize=3, color="red")
-    ax.annotate('(%d, %0.3f)' % (optimal_bandwidth, min_cv_error),
+    ax.annotate('(%0.3f, %0.2f)' % (optimal_bandwidth, min_cv_error),
                 xy= (optimal_bandwidth, min_cv_error), 
                 xytext= (optimal_bandwidth, min_cv_error-0.0008))
     plt.savefig('Best Bandwidth - Naive Bayes')
@@ -388,7 +388,6 @@ def bayes_plotting(optimal_bandwidth, min_cv_error, bandwidths, cv_error):
 
 def bayes_testing(X_train, y_train, X_test, y_test, bandwidth, kernel= 'gaussian'):
     """This function returns the prediction for the testing set"""
-    print("bandwidth", bandwidth)
     y_predict= bayes_predict(X_train, y_train, X_test, bandwidth=bandwidth)
     bayes_confusion_matrix= confusion_matrix(y_test, y_predict)
     tn, fp, fn, tp = bayes_confusion_matrix.ravel()
