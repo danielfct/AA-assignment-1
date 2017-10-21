@@ -344,7 +344,7 @@ def bayes_cv_with_bandwidth(K, h, X_train, y_train, kfolds, cv_seed):
 def bayes_cv(K, max_h, X_train, y_train, kfolds, cv_seed):
     print("\n\nTraining BAYES")
     cv_error= []
-    for curr_bandwidth in np.arange(0.01, max_h, 0.01):
+    for curr_bandwidth in np.arange(0.01, max_h, 0.02):
         print("Current Bandwidth %3.2f" % curr_bandwidth)
         curr_err, curr_std= bayes_cv_with_bandwidth(K, curr_bandwidth, X_train, y_train, kfolds, cv_seed)
         cv_error.append([curr_bandwidth, curr_err, curr_std])
@@ -415,7 +415,8 @@ def main():
     cv_seed= 52222
     logistic_iterations= 20
     knn_max= 40
-    bandwidth_max= 1
+    max_h= 1
+    kernel = 'gaussian'
     
     # Load and preprocess data
     X_train, X_test, y_train, y_test= preprocess_data(filename, train_size, split_seed, feature_names)
@@ -429,9 +430,9 @@ def main():
     knn_confusion_matrix= knn_testing(X_test, y_test, knn)
 
     # Naive Bayes Classifier
-    cv_bayes= bayes_cv('gaussian', 1, X_train, y_train, 5, cv_seed)
+    cv_bayes= bayes_cv(kernel, max_h, X_train, y_train, 5, cv_seed)
     optimal_bandwidth= bayes_tuning(cv_bayes)
-    bayes__confusion_matrix= bayes_test('gaussian', optimal_bandwidth, X_train, y_train, X_test, y_test)
+    bayes__confusion_matrix= bayes_test(kernel, optimal_bandwidth, X_train, y_train, X_test, y_test)
     
     # Compare classifiers with Mc Nemar's test
     lr_vs_knn = compare_classifiers(logistic_regression.predict(X_test), 
@@ -439,11 +440,11 @@ def main():
                                     y_test)
     
     lr_vs_bayes = compare_classifiers(logistic_regression.predict(X_test), 
-                                   bayes_predict('gaussian', optimal_bandwidth, X_train, y_train, X_test), 
+                                   bayes_predict(kernel, optimal_bandwidth, X_train, y_train, X_test), 
                                    y_test)
     
     knn_vs_bayes = compare_classifiers(knn.predict(X_test), 
-                                       bayes_predict('gaussian', optimal_bandwidth, X_train, y_train, X_test), 
+                                       bayes_predict(kernel, optimal_bandwidth, X_train, y_train, X_test), 
                                        y_test)
     
     print("\nMcNemar tests:")

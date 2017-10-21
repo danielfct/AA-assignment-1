@@ -56,10 +56,16 @@ fit our data on Logistic Regression and K-nearest Neighbours classifiers. Anothe
 \end{abstract}
 
 \section{Introduction}
-
-WHAT WE INITIALLY HAD,\\
-WHAT WAS ASKED TO DO,\\
-HOW WE PLAN ON DOING IT\\
+Using the Spyder IDE and programming language Python 3.6 and with a csv file which held data about bank notes authenticity 
+we were asked to parameterize, fit and compare three different classifiers: Logistic Regression, K-nearest Neighbours and Naive Bayes. 
+For the first two classifiers, we were allowed to import them from a module which was provided by scikit-learn. 
+The Naive Bayes classifier was fully implemented for our assignment to fit our data using the best bandwidth we could find and to then later predict the real values
+for a test set.\\
+The initial data was split into a training set and a test set. The training set was then folded into 5 folds to be used by Cross Validation.
+For the Logistic Regression classifier we started with a 'c' value of 1 and incremented to its double for 20 iterations.
+For the k value of the K-Nearest Neighbours classifier, we tested k values from 1 to 39 using odd values only. 
+In the end, we hope to compare our three classifiers performance using McNemar's test with 95\%  confidence interval 
+by comparing their predictions with the real values and pick the best classifier approached in this assignment.
 
 \section{Classifiers}
 
