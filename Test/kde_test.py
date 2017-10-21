@@ -187,9 +187,9 @@ def bayes_tuning(cv_error):
     return cv_error[index_best, 0]
 
 def bayes_test(K, h, X_train, Y_train, X_test, Y_test):
-    Y_predict= bayes_classify(K, h, X_train, y_train.values.ravel(), X_test)
+    Y_predict= bayes_classify(K, h, X_train, Y_train.values.ravel(), X_test)
     bayes_confusion_matrix= confusion_matrix(Y_test, Y_predict)
-    return bayes_confusion_matrix
+    return bayes_confusion_matrix, Y_predict
 ################# MAIN ########################################################
 filename= 'TP1-data.csv'
 feature_names= ['Variance', 'Skewness', 'Curtosis', 'Entropy']
@@ -202,7 +202,7 @@ cv_seed= 52222
 # Load and preprocess data
 X_train, X_test, y_train, y_test= preprocess_data(filename, train_size, split_seed, feature_names)
 print(X_train.shape)
-bayes_cv= bayes_cv('gaussian', 2, X_train, y_train, 5, cv_seed)
+bayes_cv= bayes_cv('gaussian', 1, X_train, y_train, 5, cv_seed)
 h= bayes_tuning(bayes_cv)
-bayes_matrix= bayes_test('gaussian', h, X_train, y_train.values.ravel(), X_test, y_test)
+bayes_matrix, Y_predict= bayes_test('gaussian', h, X_train, y_train, X_test, y_test)
 print(bayes_matrix)
