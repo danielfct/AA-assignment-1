@@ -114,7 +114,7 @@ def logistic_regression_tuning(X_train, y_train, kfolds, cv_seed, logistic_itera
         cv_eval= cross_val_score(logistic, X_train,
                                  y_train.values.ravel(),
                                  cv= StratifiedKFold(n_splits= kfolds, random_state= cv_seed, shuffle= True))
-        cv_data.append([np.log(inverse_penalisation), 1-np.mean(cv_eval), 1-logistic.score(X_train, y_train)])
+        cv_data.append([np.log10(inverse_penalisation), 1-np.mean(cv_eval), 1-logistic.score(X_train, y_train)])
         
     cv_data= pd.DataFrame(cv_data)
     cv_data.columns= ["InvPenalisation", "CvError", "TrainError"]
@@ -126,7 +126,7 @@ def logistic_regression_tuning(X_train, y_train, kfolds, cv_seed, logistic_itera
                                  cv_data[["InvPenalisation"]], 
                                  cv_data[["CvError"]],
                                  cv_data[["TrainError"]]) 
-    return optimal_c, cv_data
+    return 10**optimal_c, cv_data
 
 
 def logistic_regression_plotting(optimal_c, min_cv_error, inv_penalisations, cv_error, train_error):
