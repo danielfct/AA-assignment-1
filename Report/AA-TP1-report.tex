@@ -41,9 +41,8 @@
 
 \begin{document}
 \maketitle
-
 \begin{abstract}
-The main goal of this assignment was the parameterization, fitting and comparation of Logistic Regression,
+The main goal of this assignment was the parameterization, fitting and comparison of Logistic Regression,
  K-nearest Neighbours and Naive Bayes classifiers.\\ 
 The data set used was the banknote authentication which was obtained from the
  \href{https://archive.ics.uci.edu/ml/datasets/banknote+authentication}{UCI machine learning repository}.\\
@@ -66,7 +65,8 @@ The initial data was split into a training set and a test set. The training set 
 For the Logistic Regression classifier we started with a C value of 1 and incremented to its double for 20 iterations.
 For the K value of the K-Nearest Neighbours classifier, we tested k values from 1 to 39 using odd values only. 
 In the end, we hope to compare our three classifiers performance using McNemar's test with 95\%  confidence interval 
-by comparing their predictions with the real values and pick the best classifier approached in this assignment.
+by comparing their predictions with the real values and pick the best classifier approached in this assignment.\\
+Before proceeding with the analysis, we standardised our data. To do so, we centred with respect to the mean and normalised taking into account the standard deviation. It is important to notice that we considered the mean and the standard deviation computed from the training set. Those same transformations were applied afterwards to the test set in order to obtain an estimate of the accuracy of our classifiers. To get an idea of the distribution of our data, we also decided to visualise them by means of a series of scatterplots and density graphs. \includegraphics{"Visual Exploratory Analysis".png}
 
 \section{Classifiers}
 
