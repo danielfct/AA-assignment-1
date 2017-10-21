@@ -458,7 +458,7 @@ def main():
     
     print("\nMcNemar tests:")
     
-    print("\tLogistic Regression VS K-nearest neighbours:\n")
+    print("\tLogistic Regression VS K-nearest neighbours:")
     if (lr_vs_knn == None):
         print("\t\tNot applicable")
     else:

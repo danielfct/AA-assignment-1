@@ -34,11 +34,7 @@
 {0pt}{3.25ex plus 1ex minus .2ex}{1.5ex plus .2ex}
 
 
-<<<<<<< HEAD
 \title{\textbf{Aprendizagem Autom\'{a}tica} \\
-=======
-\title{\textbf{Aprendizagem Automática} \\
->>>>>>> 1f465b1161c6e2e69022aa434928637e690d039d
 \large Assignment 1 - Classifiers}
 
 \author{Andrea Mascaretti N52222\and Daniel Pimenta N45404}
@@ -165,13 +161,9 @@ was used.
 
 \subsubsection{Optimal C}
 
-
 Optimal C value found: 256\\
 At Cross Validation error value: 0.011\\
-<<<<<<< HEAD
 
-=======
->>>>>>> 1f465b1161c6e2e69022aa434928637e690d039d
 To tune the parameter, we relied on a stratified 5-fold cross-validation
 on the training set, picking the value that yielded the lowest value.
 From a numerical point of view, the trust region Newton method built
@@ -179,6 +171,7 @@ in the $\mathsf{ScikitLearn}$ class for $\mathsf{L2}$-logistic regression
 was used.
 The C parameter acts as a regularising term: the bigger it is, the lesser the regularising impact on the coefficients.
 From a bias-variance trade-off point of view, a bigger C term increases the variance and reduces the bias.
+ 
 
 \includegraphics{"Best C value - L2 Logistic Regression".png}
 
@@ -208,12 +201,6 @@ Therefore, applying Bayes' theorem we have
 \begin{equation}
 \mathsf{p}\left(\mathcal{C}_{k}|\mathbf{x}\right)=\frac{\mathsf{p}\left(\mathbf{x}|\,\mathcal{C}_{k}\right)\mathsf{p}\left(\mathcal{C}_{k}\right)}{\mathsf{p}\left(\mathbf{x}\right)}=\frac{K_{k}}{K}.\label{eq:-13}
 \end{equation}
-Comparing the postierior probabilities, we classified each data picking
-the maximum \textit{a posteriori}. We consider the usual Euclidean
-distance for our distance function and trained only for odds value
-of $k$ (between $1$ and $39$), picking the one that yielded the
-best result on a Stratified $5$-fold cross validation on our data
-set.
 
 \subsubsection{Optimal K}
 
@@ -224,15 +211,9 @@ Comparing the posterior probabilities, we classified each data picking
 the maximum \textit{a posteriori}. We consider the usual Euclidean
 distance for our distance function and trained only for odds value
 of $k$ (between $1$ and $39$), picking the one that yielded the
-<<<<<<< HEAD
-best result on a Stratified $5$-fold cross validation on our data set.
-We only picked odd numbers to avoid having ties.\\
-Alternatively, a rule for breaking ties could have been implemented.
-=======
 best result on a Stratified $5$-fold cross validation on our data
 set.
 We only picked odd numbers to avoid having ties. Alternatively, a rule for breaking ties could have been implemented.
->>>>>>> 1f465b1161c6e2e69022aa434928637e690d039d
 
 \includegraphics{"Best K value - K-nearest Neighbours".png}
 
@@ -292,25 +273,16 @@ To classify our data into the two categories, we considered
 \begin{equation}
 \arg\underset{k\in\left\{ 0,1\right\} }{\max}\ln\left(\mathsf{p}\left(\mathcal{C}_{k}\right)\right)+\sum\ln\left(\mathsf{p}\left(\mathbf{x}|\mathcal{C}_{k}\right)\right).\label{eq:-18}
 \end{equation}
-To set the parameter $h$, once again a 5-fold stratified cross validation
-was implemented.
 
 \subsubsection{Optimal Bandwidth found}
-
 
 Optimal Bandwidth found: 0.05\\
 At Cross Validation error value: 0.00\\
 
-<<<<<<< HEAD
-To set the parameter $h$, once again a $5$-fold stratified cross validation was implemented.\\ 
-Notice that in this case a smaller bandwidth allows for lesser bias and greater variance.
-=======
 To set the parameter $h$, once again a $5$-fold stratified cross validation was implemented.
 Notice that in this case, allowing for smaller values of $h$ implies reducing the bias and therefore increasing the variance.
->>>>>>> 1f465b1161c6e2e69022aa434928637e690d039d
 
 \includegraphics{"Best Bandwidth - Naive Bayes".png}
-
 
 \section{Comparing Classifiers}
 
@@ -387,7 +359,7 @@ K-nearest neighbours VS Naive Bayes: Not applicable
 
 Which indicates that Logistic Regression and K-nearest neighbours classifiers have similar performance and
 also that Logistic Regression and Naive Bayes have a similar performance.
-The comparation of K-nearest neighbours and Naive Bayes was not possible with McNemar's test because
+The comparison of K-nearest neighbours and Naive Bayes was not possible with McNemar's test because
 they both achieved a 0\% test error. But that could indicate both classifiers have similar performance.
 
 \section{Discussion and Conclusion}
