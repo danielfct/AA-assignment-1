@@ -389,7 +389,10 @@ def bayes_plotting(optimal_bandwidth, min_cv_error, bandwidths, cv_error):
 
 ########################MCNEMAR ###############################################
 def mc_nemar_test(e01, e10):
-    return pow((abs(e01 - e10) - 1), 2) / (e01 + e10)
+    if (e01+e10 == 0):
+        return None
+    else:
+        return pow((abs(e01 - e10) - 1), 2) / (e01 + e10)
 
 def compare_classifiers(first_clf_pred, second_clf_pred, y_test):
     e01 = e10 = 0
@@ -403,7 +406,6 @@ def compare_classifiers(first_clf_pred, second_clf_pred, y_test):
         if (curr_first_pred-curr_correct_class == 0 and abs(curr_second_pred-curr_correct_class) == 1):
             e10 += 1
    
-  #  print("\ne01:", e01, "e10:", e10)
     return mc_nemar_test(e01, e10);
 
 def main():
