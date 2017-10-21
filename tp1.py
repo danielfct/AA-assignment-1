@@ -159,7 +159,7 @@ def logistic_regresion_fitting(X_train, y_train, cv_data, kfolds, cv_seed, optim
                              y_train.values.ravel(),
                              cv= StratifiedKFold(n_splits= kfolds, random_state= cv_seed, shuffle= True))
     print("\nL2 Logistic Regression Tuning:\n" 
-          "\tOptimal Inverse C: %d\n"
+          "\tOptimal C: %d\n"
           "\tCV Error Mean: %3.4f\n"
           "\tCV Error Std: %3.4f" % 
           (optimal_c, 1 - np.average(cv_eval), np.std(cv_eval))) 
@@ -342,7 +342,6 @@ def bayes_cv_with_bandwidth(K, h, X_train, y_train, kfolds, cv_seed):
     return np.mean(errors), np.std(errors)
     
 def bayes_cv(K, max_h, X_train, y_train, kfolds, cv_seed):
-    print("\n\nTraining BAYES")
     cv_error= []
     for curr_bandwidth in np.arange(0.01, max_h, 0.02):
         print("Current Bandwidth %3.2f" % curr_bandwidth)
@@ -452,20 +451,23 @@ def main():
     print("\nMcNemar tests:")
     
     print("\tLogistic Regression VS K-nearest neighbours:\n")
+    print(lr_vs_knn)
     if (lr_vs_knn == None):
-        print("\tNot applicable\n")
+        print("\tNot applicable")
     else:
         print("%0.3f\n" % lr_vs_knn)
         
-    print("\tLogistic Regression VS Naive Bayes:\n")
+    print("\tLogistic Regression VS Naive Bayes:")
+    print(lr_vs_bayes)
     if (lr_vs_bayes == None):
         print("\tNot applicable\n")
     else:
         print("%0.3f\n" % lr_vs_bayes)
         
-    print("\tK-nearest neighbours VS Naive Bayes:\n")
+    print("\tK-nearest neighbours VS Naive Bayes:")
+    print(knn_vs_bayes)
     if (knn_vs_bayes == None):
-        print("\tNot applicable\n")
+        print("\tNot applicable")
     else:
         print("%0.3f\n" % knn_vs_bayes)
 

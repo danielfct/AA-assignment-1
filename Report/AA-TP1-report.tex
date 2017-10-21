@@ -158,6 +158,14 @@ From a numerical point of view, the trust region Newton method built
 in the $\mathsf{ScikitLearn}$ class for $\mathsf{L2}$-logistic regression
 was used.
 
+\subsubsection{Optimal C}
+
+Optimal C value found: 256\\
+At Cross Validation error value: 0.011\\
+
+// TODO\\
+explain what is the c value and the effect on its classifier and how we got the optimal value
+
 \includegraphics{Best C value - L2 Logistic Regression.png}
 
 \subsection{k-Nearest Neighbours}
@@ -193,6 +201,14 @@ of $k$ (between $1$ and $39$), picking the one that yielded the
 best result on a Stratified $5$-fold cross validation on our data
 set.
 
+\subsubsection{Optimal K}
+
+Optimal K value found: 5\\
+At Cross Validation error value: 0.002\\
+
+// TODO\\
+explain what is the k value and the effect on its classifier and how we got the optimal value
+
 \includegraphics{Best K value - K-nearest Neighbours.png}
 
 \subsection{Kernel Naive Bayes Classifier}
@@ -217,15 +233,28 @@ complex kernel density estimation to allow for more parameter freedom.
 As far as the prior are concerned, we decided to consider the relative
 frequencies of the two classes.\\
 
+\subsubsection{Optimal Bandwidth found}
+
+Optimal Bandwidth found: 0.05\\
+At Cross Validation error value: 0.00\\
+
+// TODO\\
+explain what is the bandwidth and the effect on its classifier and how we got the optimal value
+
 \includegraphics{Best Bandwidth - Naive Bayes.png}
 
-Explain what are the three parameters that were optimized and their
-effects on their respective classifiers. This will also require a
-brief explanation of how each classifier works.\\
+
+
+
+
+// TODO\\
 Explain the method by which the optimal values were found, noting
 the differences between the errors and the importance of leaving out
 a test set for the final evaluation\\
-The report should show the error plots but no other plots are necessary\\
+
+
+
+
 
 \section{Comparing Classifiers}
 
@@ -249,6 +278,7 @@ three classifiers.
         	\tab Test Error: 0.0000
 
 \subsubsection{Naive Bayes}
+TODO
 	\tab True Negative: 240\\
         	\tab False Positive: 14\\
         	\tab False Negative: 73\\
@@ -293,14 +323,15 @@ doing a simple loop and comparing both classifications with the real classificat
 After running the McNemar's test to compare all three classifiers we got this result:\\
 \begin{center}
 Logistic Regression VS K-nearest neighbours: 1.333\\
-Logistic Regression VS Naive Bayes: 78.284\\
-K-nearest neighbours VS Naive Bayes: 85.011
+Logistic Regression VS Naive Bayes: 1.333\\
+K-nearest neighbours VS Naive Bayes: Not applicable
+TODO
 \end{center}
 
-Which indicates that Logistic Regression and K-nearest neighbours classifiers have similar performance.
-
-  TODO compare naive bayes 
-
+Which indicates that Logistic Regression and K-nearest neighbours classifiers have similar performance. 
+Also Logistic Regression and Naive Bayes have a similar performance.
+The comparation of K-nearest neighbours and Naive Bayes was not possible with McNemar's test because
+they both achieved a 0\% test error. But that should indicate both classifiers have similar performaces.
 
 \section{Discussion and Conclusion}
 This assignment aimed to help us understand the fundamental principles of three 
@@ -314,8 +345,8 @@ was real of fake based on four features (Variance, Skewness, Curtosis, Entropy).
 A test of performance of those classifiers was done to compare and eventually 
 choose the best and to discuss if any is significantly better than the others. 
 From the McNemar's tests we noticed that Logistic Regression and K-nearest 
-Neighbours classifiers performances were similar. But in this particular case, 
-Naive Bayes performance was way worse than the other two classifiers.
+Neighbours classifiers performances were similar, the latter being just 
+a bit better, but not enough to differentiate their performances.
   
 
 \section{Bibliography}
