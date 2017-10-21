@@ -1,5 +1,12 @@
 # -*- coding: utf-8 -*-
 """
+Created on Sat Oct 21 17:41:07 2017
+
+@author: Andrea
+"""
+
+# -*- coding: utf-8 -*-
+"""
 Created on Sat Oct 21 13:40:15 2017
 
 @author: Andrea
@@ -107,37 +114,32 @@ def preprocess_data(filename, train_size, split_seed, feature_names, label_name=
 
 
 ####### FUNCTIONS TO IMPLEMENT NAIVE BAYES ####################################
-def gaussiank(u):
-    k=np.e**(-0.5*u**2)/np.sqrt(2*np.pi)
-    return k
-
-def nad_wat(K, h, X, Y, x):
-    num = 0
-    den = 0
-    for ix in range(len(X)):
-        yf = Y[ix]
-        u = (x-X.iloc[ix])/h
-        k = K(u)
-        den = den + k
-        num = num + yf * k
-    return num/den
-
 def log_priors(Y_train):
     """This function compute the logarithm of the priors by taking the ratio
     of classes in the training set"""
     first_class= np.sum(Y_train) / Y_train.shape[0]
     return np.log(first_class), np.log(1 - first_class)
 
+def separate_classes(X, y):
+    """This function separates a data matrix according to the class label.
+    It returns the separated databases"""
+    class_index= (y == 1)
+    X_first_class= X.iloc[class_index,:]
+    X_zero_class= X.iloc[~class_index,:]
+    return X_first_class, X_zero_class
+
 def log_likelihoods(K, h, X_train, Y_train, x_test):
     loglikelihood_first= np.zeros(1)
     loglikelihood_zero= np.zeros(1)
     n_dim= X_train.shape[1]
     for i in range(n_dim):
-        likelihood= nad_wat(K, h, X_train.iloc[:,i], Y_train, x_test[i])
-        if (likelihood - 1) < 0.001:
-            likelihood= 0.95
-        loglikelihood_first+= np.log(likelihood)
-        loglikelihood_zero+= np.log(1 - likelihood)
+        X_train_first, X_train_zero= separate_classes(X_train, Y_train)
+        kde_first= KernelDensity(bandwidth= h, kernel= K)
+        kde_zero= KernelDensity(bandwidth= h, kernel= K)
+        kde_first.fit(X_train_first)
+        kde_zero.fit(X_train_zero)
+        loglikelihood_first+= kde_first.score_samples(x_test.reshape(1, 4))
+        loglikelihood_zero+= kde_zero.score_samples(x_test.reshape(1, 4))
     return loglikelihood_first, loglikelihood_zero
 
 def bayes_classify_point(K, h, X_train, Y_train, x_test):
@@ -174,7 +176,7 @@ def bayes_cv_with_bandwidth(K, h, X_train, y_train, kfolds, cv_seed):
     
 def bayes_cv(K, max_h, X_train, y_train, kfolds, cv_seed):
     cv_error= []
-    for curr_bandwidth in np.arange(0.01, max_h, 0.5):
+    for curr_bandwidth in np.arange(0.01, max_h, 0.01):
         print("Current Bandwidth %3.2f" % curr_bandwidth)
         curr_err, curr_std= bayes_cv_with_bandwidth(K, curr_bandwidth, X_train, y_train, kfolds, cv_seed)
         cv_error.append([curr_bandwidth, curr_err, curr_std])
@@ -184,7 +186,10 @@ def bayes_tuning(cv_error):
     index_best= cv_error[:,1].argmin()
     return cv_error[index_best, 0]
 
-
+def bayes_test(K, h, X_train, Y_train, X_test, Y_test):
+    Y_predict= bayes_classify(K, h, X_train, y_train.values.ravel(), X_test)
+    bayes_confusion_matrix= confusion_matrix(Y_test, Y_predict)
+    return bayes_confusion_matrix
 ################# MAIN ########################################################
 filename= 'TP1-data.csv'
 feature_names= ['Variance', 'Skewness', 'Curtosis', 'Entropy']
@@ -196,6 +201,8 @@ cv_seed= 52222
     
 # Load and preprocess data
 X_train, X_test, y_train, y_test= preprocess_data(filename, train_size, split_seed, feature_names)
-
-bayes_cv= bayes_cv(gaussiank, 2, X_train, y_train, 5, cv_seed)
+print(X_train.shape)
+bayes_cv= bayes_cv('gaussian', 2, X_train, y_train, 5, cv_seed)
 h= bayes_tuning(bayes_cv)
+bayes_matrix= bayes_test('gaussian', h, X_train, y_train.values.ravel(), X_test, y_test)
+print(bayes_matrix)
