@@ -34,7 +34,11 @@
 {0pt}{3.25ex plus 1ex minus .2ex}{1.5ex plus .2ex}
 
 
+<<<<<<< HEAD
 \title{\textbf{Aprendizagem Autom\'{a}tica} \\
+=======
+\title{\textbf{Aprendizagem Automática} \\
+>>>>>>> 1f465b1161c6e2e69022aa434928637e690d039d
 \large Assignment 1 - Classifiers}
 
 \author{Andrea Mascaretti N52222\and Daniel Pimenta N45404}
@@ -161,9 +165,13 @@ was used.
 
 \subsubsection{Optimal C}
 
+
 Optimal C value found: 256\\
 At Cross Validation error value: 0.011\\
+<<<<<<< HEAD
 
+=======
+>>>>>>> 1f465b1161c6e2e69022aa434928637e690d039d
 To tune the parameter, we relied on a stratified 5-fold cross-validation
 on the training set, picking the value that yielded the lowest value.
 From a numerical point of view, the trust region Newton method built
@@ -216,9 +224,15 @@ Comparing the posterior probabilities, we classified each data picking
 the maximum \textit{a posteriori}. We consider the usual Euclidean
 distance for our distance function and trained only for odds value
 of $k$ (between $1$ and $39$), picking the one that yielded the
+<<<<<<< HEAD
 best result on a Stratified $5$-fold cross validation on our data set.
 We only picked odd numbers to avoid having ties.\\
 Alternatively, a rule for breaking ties could have been implemented.
+=======
+best result on a Stratified $5$-fold cross validation on our data
+set.
+We only picked odd numbers to avoid having ties. Alternatively, a rule for breaking ties could have been implemented.
+>>>>>>> 1f465b1161c6e2e69022aa434928637e690d039d
 
 \includegraphics{"Best K value - K-nearest Neighbours".png}
 
@@ -283,11 +297,17 @@ was implemented.
 
 \subsubsection{Optimal Bandwidth found}
 
+
 Optimal Bandwidth found: 0.05\\
 At Cross Validation error value: 0.00\\
 
+<<<<<<< HEAD
 To set the parameter $h$, once again a $5$-fold stratified cross validation was implemented.\\ 
 Notice that in this case a smaller bandwidth allows for lesser bias and greater variance.
+=======
+To set the parameter $h$, once again a $5$-fold stratified cross validation was implemented.
+Notice that in this case, allowing for smaller values of $h$ implies reducing the bias and therefore increasing the variance.
+>>>>>>> 1f465b1161c6e2e69022aa434928637e690d039d
 
 \includegraphics{"Best Bandwidth - Naive Bayes".png}
 
