@@ -460,21 +460,21 @@ def main():
     
     print("\tLogistic Regression VS K-nearest neighbours:\n")
     if (lr_vs_knn == None):
-        print("\tNot applicable")
+        print("\t\tNot applicable")
     else:
-        print("%0.3f\n" % lr_vs_knn)
+        print("\t\t%0.3f\n" % lr_vs_knn)
         
     print("\tLogistic Regression VS Naive Bayes:")
     if (lr_vs_bayes == None):
-        print("\tNot applicable\n")
+        print("\t\tNot applicable\n")
     else:
-        print("%0.3f\n" % lr_vs_bayes)
+        print("\t\t%0.3f\n" % lr_vs_bayes)
         
     print("\tK-nearest neighbours VS Naive Bayes:")
     if (knn_vs_bayes == None):
-        print("\tNot applicable")
+        print("\t\tNot applicable")
     else:
-        print("%0.3f\n" % knn_vs_bayes)
+        print("\t\t%0.3f\n" % knn_vs_bayes)
 
     
 main()
